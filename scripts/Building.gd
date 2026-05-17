@@ -1,0 +1,73 @@
+extends PanelContainer
+
+@export var building_id: int = 0
+
+@onready var icon_label     = $MarginContainer/VBoxContainer/IconLabel
+@onready var name_label     = $MarginContainer/VBoxContainer/NameLabel
+@onready var level_label    = $MarginContainer/VBoxContainer/LevelLabel
+@onready var production_bar = $MarginContainer/VBoxContainer/ProductionBar
+@onready var status_label   = $MarginContainer/VBoxContainer/StatusLabel
+@onready var collect_button = $MarginContainer/VBoxContainer/CollectButton
+@onready var upgrade_button = $MarginContainer/VBoxContainer/UpgradeButton
+
+signal open_upgrade_card(id: int)
+
+func _ready():
+	collect_button.pressed.connect(_on_collect_pressed)
+	upgrade_button.pressed.connect(_on_upgrade_pressed)
+
+func _process(delta: float):
+	var b = GameState.buildings[building_id]
+	if b.ready < GameState.MAX_READY:
+		b.progress_ms += delta * 1000.0
+		var cycle_ms = GameState.cycle_time_sec(b) * 1000.0
+		while b.progress_ms >= cycle_ms and b.ready < GameState.MAX_READY:
+			b.progress_ms -= cycle_ms
+			b.ready += 1
+		if b.ready >= GameState.MAX_READY:
+			b.progress_ms = 0.0
+	if Engine.get_process_frames() % 5 == 0:
+		_update_ui()
+
+func _update_ui():
+	var b   = GameState.buildings[building_id]
+	var gpc = GameState.gold_per_cycle(b)
+	var uc  = GameState.upgrade_cost(b)
+	var ct  = GameState.cycle_time_sec(b)
+
+	icon_label.text  = b.icon_text
+	name_label.text  = b.name
+	level_label.text = "Lv.%d  +%d💰" % [b.level, gpc]
+
+	if b.ready >= GameState.MAX_READY:
+		production_bar.value = 100
+		status_label.text    = "ΓΕΜΑΤΟ (%d)!" % b.ready
+	else:
+		production_bar.value = (b.progress_ms / (ct * 1000.0)) * 100.0
+		var rem = ct - (b.progress_ms / 1000.0)
+		status_label.text = ("%dx • " % b.ready if b.ready > 0 else "") + GameState.fmt_time(rem)
+
+	collect_button.disabled = b.ready == 0
+	collect_button.text = "Συλλογή +%d💰" % (b.ready * gpc) if b.ready > 0 else "Παράγει..."
+	upgrade_button.text = "⬆ %d💰" % uc
+	upgrade_button.modulate = Color(1,1,1) if GameState.gold >= uc else Color(.6,.6,.6)
+
+func _on_collect_pressed():
+	var earned = GameState.collect(building_id)
+	if earned <= 0:
+		return
+	var lbl = Label.new()
+	lbl.text = "+%d💰" % earned
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_color", Color(0.1, 0.8, 0.1))
+	lbl.position = Vector2(size.x / 2.0 - 20.0, 15.0)
+	lbl.z_index = 10
+	add_child(lbl)
+	var tw = create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 50.0, 0.8)
+	tw.tween_property(lbl, "modulate:a", 0.0, 0.8)
+	tw.tween_callback(lbl.queue_free).set_delay(0.8)
+
+func _on_upgrade_pressed():
+	open_upgrade_card.emit(building_id)

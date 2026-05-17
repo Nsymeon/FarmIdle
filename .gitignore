@@ -1,0 +1,8 @@
+.godot/
+*.translation
+*.tmp
+android/.gradle/
+android/build/
+build/
+.DS_Store
+Thumbs.db
