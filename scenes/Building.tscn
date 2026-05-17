@@ -1,11 +1,11 @@
 [gd_scene load_steps=2 format=3 uid="uid://ccixbfnrlvof5"]
 
-[ext_resource type="Script" path="res://scripts/Building.gd" id="1_amc4y"]
+[ext_resource type="Script" path="res://scripts/Building.gd" id="1_si6tq"]
 
 [node name="Building" type="PanelContainer"]
 offset_right = 40.0
 offset_bottom = 40.0
-script = ExtResource("1_amc4y")
+script = ExtResource("1_si6tq")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 2
@@ -50,6 +50,7 @@ text = "5.0 s"
 horizontal_alignment = 1
 
 [node name="CollectButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 text = "Συλλογή"
 

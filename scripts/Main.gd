@@ -5,7 +5,7 @@ extends Node2D
 @onready var grid         = $UI/Layout/Scroll/Grid
 @onready var upgrade_card = $UpgradeCard
 
-const BuildingScene = preload("res://scenes/Βuilding.tscn")
+const BuildingScene = preload("res://scenes/Building.tscn")
 
 func _ready():
 	GameState.gold_changed.connect(_update_gold)
