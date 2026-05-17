@@ -76,3 +76,5 @@ jobs:
           name: FarmIdle-APK-v${{ github.run_number }}
           path: build/android/FarmIdle.apk
           retention-days: 30
+
+          #damn
