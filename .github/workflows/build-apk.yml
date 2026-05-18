@@ -60,9 +60,17 @@ jobs:
           cat ~/.config/godot/editor_settings-4.tres
 
       - name: Export APK
+        env:
+          GODOT_ANDROID_SDK_PATH: /usr/local/lib/android/sdk
+          GODOT_JAVA_SDK_PATH: /usr/lib/jvm/temurin-17-jdk-amd64
         run: |
           mkdir -p build/android
-          godot --headless --export-release "Android" build/android/FarmIdle-unsigned.apk 2>&1 || true
+          godot --headless \
+            --export-release "Android" \
+            build/android/FarmIdle-unsigned.apk \
+            -- \
+            --android-sdk-path /usr/local/lib/android/sdk \
+            --java-path /usr/lib/jvm/temurin-17-jdk-amd64 2>&1
           echo "=== Build dir ==="
           ls -la build/android/ || echo "empty"
 
