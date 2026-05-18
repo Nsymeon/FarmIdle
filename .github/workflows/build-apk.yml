@@ -47,17 +47,16 @@ jobs:
           unzip -q Godot_v4.3-stable_export_templates.tpz -d /tmp/tpl
           mv /tmp/tpl/templates/* ~/.local/share/godot/export_templates/4.3.stable/
 
-      - name: Configure Godot Android paths
+        - name: Configure Godot Android paths
         run: |
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.tres << EOF
-          [gd_resource type="EditorSettings" format=3]
-          [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
-          export/android/java_sdk_path = "$JAVA_HOME"
-          EOF
-          echo "Editor settings:"
+          printf '[gd_resource type="EditorSettings" format=3]\n[resource]\nexport/android/android_sdk_path = "%s"\nexport/android/java_sdk_path = "%s"\n' "$ANDROID_HOME" "$JAVA_HOME" > ~/.config/godot/editor_settings-4.tres
+          echo "=== Editor settings ==="
           cat ~/.config/godot/editor_settings-4.tres
+          echo "=== Java bin check ==="
+          ls $JAVA_HOME/bin/java
+          echo "=== Android SDK check ==="
+          ls $ANDROID_HOME/build-tools/34.0.0/apksigner
 
       - name: Generate Keystore
         run: |
