@@ -81,11 +81,6 @@ jobs:
             -keypass "${{ secrets.KEY_PASSWORD }}" \
             -dname "CN=FarmIdle, OU=Game, O=Game, L=Athens, ST=Attica, C=GR"
 
-      - name: Export APK
-        run: |
-          mkdir -p build/android
-          godot --headless --export-release "Android" build/android/FarmIdle-unsigned.apk
-
       - name: Sign APK
         run: |
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
