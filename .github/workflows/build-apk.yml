@@ -67,14 +67,15 @@ jobs:
 
       - name: Sign APK
         run: |
-          /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
-            --ks my-farm.keystore \
-            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
-            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
-            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
-            --out build/android/FarmIdle.apk \
-            build/android/FarmIdle-unsigned.apk
-
+          jarsigner -verbose \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore my-farm.keystore \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.KEY_PASSWORD }}" \
+            build/android/FarmIdle-unsigned.apk \
+            "${{ secrets.KEY_ALIAS }}"
+          cp build/android/FarmIdle-unsigned.apk build/android/FarmIdle.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
