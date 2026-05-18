@@ -52,30 +52,34 @@ jobs:
           export/android/java_sdk_path = "/usr/lib/jvm/temurin-17-amd64"
           EOF
 
-      - name: Decode Keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Generate Keystore
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > my-farm.keystore
-          ls -la my-farm.keystore
+          keytool -genkey -v \
+            -keystore my-farm.keystore \
+            -alias farm \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storetype PKCS12 \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.KEY_PASSWORD }}" \
+            -dname "CN=FarmIdle, OU=Game, O=Game, L=Athens, ST=Attica, C=GR"
 
       - name: Export APK
         run: |
           mkdir -p build/android
-          godot --headless --export-release "Android" build/android/FarmIdle-unsigned.apk || true
-          ls -la build/android/
+          godot --headless --export-release "Android" build/android/FarmIdle-unsigned.apk
 
       - name: Sign APK
         run: |
-          jarsigner -verbose \
-            -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore my-farm.keystore \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-            -keypass "${{ secrets.KEY_PASSWORD }}" \
-            build/android/FarmIdle-unsigned.apk \
-            "${{ secrets.KEY_ALIAS }}"
-          cp build/android/FarmIdle-unsigned.apk build/android/FarmIdle.apk
+          /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
+            --ks my-farm.keystore \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
+            --out build/android/FarmIdle.apk \
+            build/android/FarmIdle-unsigned.apk
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
