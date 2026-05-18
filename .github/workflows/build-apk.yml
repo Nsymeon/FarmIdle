@@ -22,22 +22,17 @@ jobs:
 
       - name: Setup Android paths
         run: |
-          rm -f /root/.config/godot/editor_settings-4.3.tres
-          echo "=== Checking Java ==="
-          ls /usr/lib/jvm/ || echo "No JVM dir"
-          ls /usr/lib/jvm/java-17-openjdk-amd64/ || echo "DIR NOT FOUND"
-          ls /usr/lib/jvm/java-17-openjdk-amd64/bin/java || echo "NOT FOUND"
-          JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
-          echo "Java path: $JAVA_PATH"
-          echo "=== Checking Android SDK ==="
-          ls /usr/lib/android-sdk/build-tools/
-          echo "=== Writing settings ==="
-          mkdir -p /root/.config/godot
-          echo '[gd_resource type="EditorSettings" format=3]' > /root/.config/godot/editor_settings-4.3.tres
-          echo '[resource]' >> /root/.config/godot/editor_settings-4.3.tres
-          echo "export/android/android_sdk_path = \"/usr/lib/android-sdk\"" >> /root/.config/godot/editor_settings-4.3.tres
-          echo "export/android/java_sdk_path = \"$JAVA_PATH\"" >> /root/.config/godot/editor_settings-4.3.tres
           ln -sf /usr/lib/android-sdk/build-tools/33.0.2 /usr/lib/android-sdk/build-tools/34.0.0 || true
+          timeout 30 godot --headless --quit 2>/dev/null || true
+          echo "=== Settings file after first run ==="
+          cat /root/.config/godot/editor_settings-4.3.tres || echo "File not found"
+          echo "=== Appending Android settings ==="
+          grep -q "android_sdk_path" /root/.config/godot/editor_settings-4.3.tres \
+            && sed -i 's|export/android/android_sdk_path = .*|export/android/android_sdk_path = "/usr/lib/android-sdk"|' /root/.config/godot/editor_settings-4.3.tres \
+            || echo 'export/android/android_sdk_path = "/usr/lib/android-sdk"' >> /root/.config/godot/editor_settings-4.3.tres
+          grep -q "java_sdk_path" /root/.config/godot/editor_settings-4.3.tres \
+            && sed -i 's|export/android/java_sdk_path = .*|export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-amd64"|' /root/.config/godot/editor_settings-4.3.tres \
+            || echo 'export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-amd64"' >> /root/.config/godot/editor_settings-4.3.tres
           echo "=== Final settings ==="
           cat /root/.config/godot/editor_settings-4.3.tres
 
