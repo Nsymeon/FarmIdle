@@ -44,13 +44,16 @@ jobs:
 
       - name: Configure Godot Android paths
         run: |
+          JAVA_HOME_PATH=$(dirname $(dirname $(readlink -f $(which java))))
+          echo "Java path: $JAVA_HOME_PATH"
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.tres << 'EOF'
+          cat > ~/.config/godot/editor_settings-4.tres << EOF
           [gd_resource type="EditorSettings" format=3]
           [resource]
           export/android/android_sdk_path = "/usr/local/lib/android/sdk"
-          export/android/java_sdk_path = "/usr/lib/jvm/temurin-17-amd64"
+          export/android/java_sdk_path = "$JAVA_HOME_PATH"
           EOF
+          cat ~/.config/godot/editor_settings-4.tres
 
       - name: Generate Keystore
         run: |
