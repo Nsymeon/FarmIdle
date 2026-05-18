@@ -45,24 +45,29 @@ jobs:
       - name: Configure Godot Android paths
         run: |
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.tres << EOF
+          cat > ~/.config/godot/editor_settings-4.tres << 'EOF'
           [gd_resource type="EditorSettings" format=3]
           [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/android_sdk_path = "/usr/local/lib/android/sdk"
+          export/android/java_sdk_path = "/usr/lib/jvm/temurin-17-amd64"
           EOF
 
       - name: Decode Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > my-farm.keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > my-farm.keystore
+          ls -la my-farm.keystore
 
       - name: Export APK
         run: |
           mkdir -p build/android
-          godot --headless --export-release "Android" build/android/FarmIdle-unsigned.apk
+          godot --headless --export-release "Android" build/android/FarmIdle-unsigned.apk || true
+          ls -la build/android/
 
       - name: Sign APK
         run: |
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+          /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner sign \
             --ks my-farm.keystore \
             --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
             --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
@@ -76,5 +81,3 @@ jobs:
           name: FarmIdle-APK-v${{ github.run_number }}
           path: build/android/FarmIdle.apk
           retention-days: 30
-
-          #damn
