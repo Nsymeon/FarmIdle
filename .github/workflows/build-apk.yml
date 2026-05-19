@@ -70,7 +70,7 @@ jobs:
       - name: Export APK
         run: |
           mkdir -p build/android
-          godot --headless --export-release "Android" build/android/FarmIdle-unsigned.apk 2>&1
+          godot --headless --verbose --export-release "Android" build/android/FarmIdle-unsigned.apk 2>&1
           echo "=== Build dir ==="
           ls -la build/android/ || echo "empty"
 
