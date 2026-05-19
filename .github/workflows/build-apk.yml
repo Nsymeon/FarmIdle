@@ -40,19 +40,7 @@ jobs:
 
       - name: Setup Godot editor settings
         run: |
-          mkdir -p $HOME/.config/godot
-          python3 -c "
-import os
-android = os.environ['ANDROID_HOME']
-java = os.environ['JAVA_HOME']
-content = '[gd_resource type=\"EditorSettings\" format=3]\n\n[resource]\nexport/android/android_sdk_path = \"' + android + '\"\nexport/android/java_sdk_path = \"' + java + '\"\n'
-print('Writing settings:')
-print(content)
-for f in [os.path.expanduser('~/.config/godot/editor_settings-4.tres'), os.path.expanduser('~/.config/godot/editor_settings-4.3.tres')]:
-    open(f, 'w').write(content)
-    os.chmod(f, 0o444)
-    print('Written:', f)
-"
+          python3 write_settings.py
           cat $HOME/.config/godot/editor_settings-4.tres
           ls $ANDROID_HOME/build-tools/
           ls $JAVA_HOME/bin/java
