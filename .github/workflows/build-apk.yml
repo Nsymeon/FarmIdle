@@ -43,16 +43,26 @@ jobs:
       - name: Setup Godot editor settings
         run: |
           mkdir -p $HOME/.config/godot
+          ANDROID_SDK_PATH="$ANDROID_HOME"
+          JAVA_SDK_PATH="$JAVA_HOME"
+          echo "Android: $ANDROID_SDK_PATH"
+          echo "Java: $JAVA_SDK_PATH"
           for f in "$HOME/.config/godot/editor_settings-4.tres" "$HOME/.config/godot/editor_settings-4.3.tres"; do
-            echo '[gd_resource type="EditorSettings" format=3]' > "$f"
-            echo '' >> "$f"
-            echo '[resource]' >> "$f"
-            echo "export/android/android_sdk_path = \"$ANDROID_HOME\"" >> "$f"
-            echo "export/android/java_sdk_path = \"$JAVA_HOME\"" >> "$f"
+            cat > "$f" << EOF
+[gd_resource type="EditorSettings" format=3]
+
+[resource]
+export/android/android_sdk_path = "$ANDROID_SDK_PATH"
+export/android/java_sdk_path = "$JAVA_SDK_PATH"
+EOF
             chmod 444 "$f"
             echo "=== $f ==="
             cat "$f"
           done
+          echo "=== Verify Android SDK ==="
+          ls $ANDROID_HOME/build-tools/
+          echo "=== Verify Java ==="
+          ls $JAVA_HOME/bin/java
 
       - name: Generate Keystore
         run: |
