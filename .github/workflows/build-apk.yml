@@ -36,32 +36,25 @@ jobs:
 
       - name: Setup Android SDK
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "JAVA_HOME=$JAVA_HOME"
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" --sdk_root=$ANDROID_HOME 2>/dev/null || true
 
       - name: Setup Godot editor settings
         run: |
           mkdir -p $HOME/.config/godot
-          ANDROID_SDK_PATH="$ANDROID_HOME"
-          JAVA_SDK_PATH="$JAVA_HOME"
-          echo "Android: $ANDROID_SDK_PATH"
-          echo "Java: $JAVA_SDK_PATH"
-          for f in "$HOME/.config/godot/editor_settings-4.tres" "$HOME/.config/godot/editor_settings-4.3.tres"; do
-            cat > "$f" << EOF
-[gd_resource type="EditorSettings" format=3]
-
-[resource]
-export/android/android_sdk_path = "$ANDROID_SDK_PATH"
-export/android/java_sdk_path = "$JAVA_SDK_PATH"
-EOF
-            chmod 444 "$f"
-            echo "=== $f ==="
-            cat "$f"
-          done
-          echo "=== Verify Android SDK ==="
+          python3 -c "
+import os
+android = os.environ['ANDROID_HOME']
+java = os.environ['JAVA_HOME']
+content = '[gd_resource type=\"EditorSettings\" format=3]\n\n[resource]\nexport/android/android_sdk_path = \"' + android + '\"\nexport/android/java_sdk_path = \"' + java + '\"\n'
+print('Writing settings:')
+print(content)
+for f in [os.path.expanduser('~/.config/godot/editor_settings-4.tres'), os.path.expanduser('~/.config/godot/editor_settings-4.3.tres')]:
+    open(f, 'w').write(content)
+    os.chmod(f, 0o444)
+    print('Written:', f)
+"
+          cat $HOME/.config/godot/editor_settings-4.tres
           ls $ANDROID_HOME/build-tools/
-          echo "=== Verify Java ==="
           ls $JAVA_HOME/bin/java
 
       - name: Generate Keystore
