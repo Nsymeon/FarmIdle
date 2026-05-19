@@ -42,16 +42,14 @@ jobs:
 
       - name: Setup Godot editor settings
         run: |
-          timeout 10 godot --headless --quit 2>/dev/null || true
-          sleep 2
           mkdir -p $HOME/.config/godot
-          echo "Writing settings to $HOME/.config/godot/"
           for f in "$HOME/.config/godot/editor_settings-4.tres" "$HOME/.config/godot/editor_settings-4.3.tres"; do
             echo '[gd_resource type="EditorSettings" format=3]' > "$f"
             echo '' >> "$f"
             echo '[resource]' >> "$f"
             echo "export/android/android_sdk_path = \"$ANDROID_HOME\"" >> "$f"
             echo "export/android/java_sdk_path = \"$JAVA_HOME\"" >> "$f"
+            chmod 444 "$f"
             echo "=== $f ==="
             cat "$f"
           done
