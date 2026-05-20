@@ -150,8 +150,8 @@ func load_game():
 		buildings[i].level       = int(saved[i].get("level", 1))
 		buildings[i].ready       = int(saved[i].get("ready", 0))
 		buildings[i].progress_ms = float(saved[i].get("progress_ms", 0.0))
-	buildings[i].unlocked = bool(saved[i].get("unlocked", i == 0))
-	buildings[i].unlock_cost = int(saved[i].get("unlock_cost", buildings[i].unlock_cost))
+		buildings[i].unlocked = bool(saved[i].get("unlocked", i == 0))
+		buildings[i].unlock_cost = int(saved[i].get("unlock_cost", buildings[i].unlock_cost))
 
 func _notification(what: int):
 	if what == NOTIFICATION_APPLICATION_PAUSED:
