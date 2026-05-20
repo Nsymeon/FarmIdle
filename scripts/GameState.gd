@@ -12,37 +12,37 @@ const SAVE_PATH = "user://savegame.json"
 
 var buildings: Array = [
 	{
-		"id": 0, "name": "Κοτέτσι", "icon_text": "🐔",
+		"id": 0, "name": "Κοτέτσι", "icon_text": "KOTA",
 		"level": 1, "base_gold": 2, "cycle_ms": 5000.0,
 		"base_cost": 40, "ready": 0, "progress_ms": 0.0,
 		"unlocked": true, "unlock_cost": 0
 	},
 	{
-		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "🐄",
+		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "AGEL",
 		"level": 1, "base_gold": 5, "cycle_ms": 10000.0,
 		"base_cost": 100, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 1000
 	},
 	{
-		"id": 2, "name": "Χωράφι Σίτου", "icon_text": "🌾",
+		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "SITO",
 		"level": 1, "base_gold": 3, "cycle_ms": 7000.0,
 		"base_cost": 70, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 2000
 	},
 	{
-		"id": 3, "name": "Μελισσοκομείο", "icon_text": "🍯",
+		"id": 3, "name": "Μελισσοκομείο", "icon_text": "MELI",
 		"level": 1, "base_gold": 8, "cycle_ms": 15000.0,
 		"base_cost": 150, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 5000
 	},
 	{
-		"id": 4, "name": "Μποστάνι", "icon_text": "🫐",
+		"id": 4, "name": "Μποστάνι", "icon_text": "MPOS",
 		"level": 1, "base_gold": 1, "cycle_ms": 3000.0,
 		"base_cost": 25, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 10000
 	},
 	{
-		"id": 5, "name": "Αγορά", "icon_text": "🏪",
+		"id": 5, "name": "Αγορά", "icon_text": "AGORA",
 		"level": 1, "base_gold": 15, "cycle_ms": 20000.0,
 		"base_cost": 200, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 20000
@@ -66,6 +66,11 @@ func fmt_time(sec: float) -> String:
 	if sec >= 60.0:
 		return "%.1fm" % (sec / 60.0)
 	return "%.1fs" % sec
+
+func _fmt_number(n: float) -> String:
+	if n >= 1_000_000: return "%.1fM" % (n / 1_000_000.0)
+	if n >= 1_000:     return "%.1fK" % (n / 1_000.0)
+	return str(int(n))
 
 func collect(building_id: int) -> int:
 	var b = buildings[building_id]
@@ -113,6 +118,8 @@ func _process_offline_earnings():
 		return
 	var offline_sec = clamp(float(current_time - last_save_time), 0.0, 4.0 * 3600.0)
 	for b in buildings:
+		if not b.unlocked:
+			continue
 		var cycle_ms = cycle_time_sec(b) * 1000.0
 		var total_ms = b.progress_ms + (offline_sec * 1000.0)
 		var cycles_done = min(int(total_ms / cycle_ms), MAX_READY - b.ready)
@@ -150,8 +157,7 @@ func load_game():
 		buildings[i].level       = int(saved[i].get("level", 1))
 		buildings[i].ready       = int(saved[i].get("ready", 0))
 		buildings[i].progress_ms = float(saved[i].get("progress_ms", 0.0))
-		buildings[i].unlocked = bool(saved[i].get("unlocked", i == 0))
-		buildings[i].unlock_cost = int(saved[i].get("unlock_cost", buildings[i].unlock_cost))
+		buildings[i].unlocked    = bool(saved[i].get("unlocked", i == 0))
 
 func _notification(what: int):
 	if what == NOTIFICATION_APPLICATION_PAUSED:
