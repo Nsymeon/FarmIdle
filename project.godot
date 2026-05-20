@@ -30,6 +30,4 @@ window/handheld/orientation=1
 [rendering]
 
 renderer/rendering_method="mobile"
-[rendering]
-
 textures/vram_compression/import_etc2_astc=true

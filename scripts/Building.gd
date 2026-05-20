@@ -18,6 +18,9 @@ func _ready():
 
 func _process(delta: float):
 	var b = GameState.buildings[building_id]
+	if not b.unlocked:
+		_update_locked_ui()
+		return
 	if b.ready < GameState.MAX_READY:
 		b.progress_ms += delta * 1000.0
 		var cycle_ms = GameState.cycle_time_sec(b) * 1000.0
@@ -28,6 +31,19 @@ func _process(delta: float):
 			b.progress_ms = 0.0
 	if Engine.get_process_frames() % 5 == 0:
 		_update_ui()
+
+func _update_locked_ui():
+	var b = GameState.buildings[building_id]
+	icon_label.text  = "🔒"
+	name_label.text  = b.name
+	level_label.text = "Κλειδωμένο"
+	production_bar.value = 0
+	status_label.text = ""
+	collect_button.disabled = true
+	collect_button.text = "Κλειδωμένο"
+	var can_afford = GameState.gold >= b.unlock_cost
+	upgrade_button.text = "🔓 Ξεκλείδωμα %s💰" % GameState._fmt_number(b.unlock_cost)
+	upgrade_button.modulate = Color(1, 0.85, 0.1) if can_afford else Color(0.5, 0.5, 0.5)
 
 func _update_ui():
 	var b   = GameState.buildings[building_id]
@@ -53,6 +69,9 @@ func _update_ui():
 	upgrade_button.modulate = Color(1,1,1) if GameState.gold >= uc else Color(.6,.6,.6)
 
 func _on_collect_pressed():
+	var b = GameState.buildings[building_id]
+	if not b.unlocked:
+		return
 	var earned = GameState.collect(building_id)
 	if earned <= 0:
 		return
@@ -70,4 +89,9 @@ func _on_collect_pressed():
 	tw.tween_callback(lbl.queue_free).set_delay(0.8)
 
 func _on_upgrade_pressed():
+	var b = GameState.buildings[building_id]
+	if not b.unlocked:
+		if GameState.unlock(building_id):
+			_update_ui()
+		return
 	open_upgrade_card.emit(building_id)

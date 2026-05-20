@@ -14,32 +14,38 @@ var buildings: Array = [
 	{
 		"id": 0, "name": "Κοτέτσι", "icon_text": "🐔",
 		"level": 1, "base_gold": 2, "cycle_ms": 5000.0,
-		"base_cost": 40, "ready": 0, "progress_ms": 0.0
+		"base_cost": 40, "ready": 0, "progress_ms": 0.0,
+		"unlocked": true, "unlock_cost": 0
 	},
 	{
 		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "🐄",
 		"level": 1, "base_gold": 5, "cycle_ms": 10000.0,
-		"base_cost": 100, "ready": 0, "progress_ms": 0.0
+		"base_cost": 100, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 1000
 	},
 	{
 		"id": 2, "name": "Χωράφι Σίτου", "icon_text": "🌾",
 		"level": 1, "base_gold": 3, "cycle_ms": 7000.0,
-		"base_cost": 70, "ready": 0, "progress_ms": 0.0
+		"base_cost": 70, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 2000
 	},
 	{
 		"id": 3, "name": "Μελισσοκομείο", "icon_text": "🍯",
 		"level": 1, "base_gold": 8, "cycle_ms": 15000.0,
-		"base_cost": 150, "ready": 0, "progress_ms": 0.0
+		"base_cost": 150, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 5000
 	},
 	{
 		"id": 4, "name": "Μποστάνι", "icon_text": "🫐",
 		"level": 1, "base_gold": 1, "cycle_ms": 3000.0,
-		"base_cost": 25, "ready": 0, "progress_ms": 0.0
+		"base_cost": 25, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 10000
 	},
 	{
 		"id": 5, "name": "Αγορά", "icon_text": "🏪",
 		"level": 1, "base_gold": 15, "cycle_ms": 20000.0,
-		"base_cost": 200, "ready": 0, "progress_ms": 0.0
+		"base_cost": 200, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 20000
 	},
 ]
 
@@ -82,6 +88,19 @@ func upgrade(building_id: int) -> bool:
 	b.level += 1
 	b.progress_ms = 0.0
 	b.ready = 0
+	gold_changed.emit(gold)
+	building_updated.emit(building_id)
+	save_game()
+	return true
+
+func unlock(building_id: int) -> bool:
+	var b = buildings[building_id]
+	if b.unlocked:
+		return false
+	if gold < b.unlock_cost:
+		return false
+	gold -= b.unlock_cost
+	b.unlocked = true
 	gold_changed.emit(gold)
 	building_updated.emit(building_id)
 	save_game()
@@ -131,6 +150,8 @@ func load_game():
 		buildings[i].level       = int(saved[i].get("level", 1))
 		buildings[i].ready       = int(saved[i].get("ready", 0))
 		buildings[i].progress_ms = float(saved[i].get("progress_ms", 0.0))
+	buildings[i].unlocked = bool(saved[i].get("unlocked", i == 0))
+	buildings[i].unlock_cost = int(saved[i].get("unlock_cost", buildings[i].unlock_cost))
 
 func _notification(what: int):
 	if what == NOTIFICATION_APPLICATION_PAUSED:
