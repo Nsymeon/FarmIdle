@@ -19,6 +19,25 @@ func _ready():
 	GameState.special_upgraded.connect(_update_special_buttons)
 	tap_button.pressed.connect(_on_tap_pressed)
 	auto_collect_btn.pressed.connect(_on_auto_collect_upgrade)
+# Κάνε το tap button κυκλικό
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = Color("#4a8c2a")
+	style_normal.corner_radius_top_left = 50
+	style_normal.corner_radius_top_right = 50
+	style_normal.corner_radius_bottom_left = 50
+	style_normal.corner_radius_bottom_right = 50
+	style_normal.border_width_top = 3
+	style_normal.border_width_bottom = 3
+	style_normal.border_width_left = 3
+	style_normal.border_width_right = 3
+	style_normal.border_color = Color("#88cc44")
+	var style_hover = style_normal.duplicate()
+	style_hover.bg_color = Color("#5da334")
+	var style_pressed = style_normal.duplicate()
+	style_pressed.bg_color = Color("#3a7020")
+	tap_button.add_theme_stylebox_override("normal", style_normal)
+	tap_button.add_theme_stylebox_override("hover", style_hover)
+	tap_button.add_theme_stylebox_override("pressed", style_pressed)
 	max_cap_btn.pressed.connect(_on_max_cap_upgrade)
 	auto_tap_btn.pressed.connect(_on_auto_tap_upgrade)
 	for b in GameState.buildings:

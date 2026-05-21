@@ -17,18 +17,23 @@ func _ready():
 	upgrade_button.pressed.connect(_on_upgrade_pressed)
 
 func _process(delta: float):
-	var b = GameState.buildings[building_id]
-	if not b.unlocked:
+	# Πάρε πάντα reference από το array — ποτέ var b = ...
+	if not GameState.buildings[building_id].unlocked:
 		_update_locked_ui()
 		return
-	if b.ready < GameState.MAX_READY:
+
+	var b = GameState.buildings[building_id]
+	var cap = GameState.get_max_capacity()
+
+	if b.ready < cap:
 		b.progress_ms += delta * 1000.0
 		var cycle_ms = GameState.cycle_time_sec(b) * 1000.0
-		while b.progress_ms >= cycle_ms and b.ready < GameState.MAX_READY:
+		while b.progress_ms >= cycle_ms and b.ready < cap:
 			b.progress_ms -= cycle_ms
 			b.ready += 1
-		if b.ready >= GameState.MAX_READY:
+		if b.ready >= cap:
 			b.progress_ms = 0.0
+
 	if Engine.get_process_frames() % 5 == 0:
 		_update_ui()
 
@@ -42,7 +47,8 @@ func _update_locked_ui():
 	collect_button.disabled = true
 	collect_button.text = "Κλειδωμένο"
 	var can_afford = GameState.gold >= b.unlock_cost
-	upgrade_button.text = "🔓 Ξεκλείδωμα %s💰" % GameState._fmt_number(b.unlock_cost)
+	var cost_str = GameState._fmt_number(float(b.unlock_cost))
+	upgrade_button.text = "Ξεκλείδωμα: %s💰" % cost_str
 	upgrade_button.modulate = Color(1, 0.85, 0.1) if can_afford else Color(0.5, 0.5, 0.5)
 
 func _update_ui():
@@ -50,12 +56,13 @@ func _update_ui():
 	var gpc = GameState.gold_per_cycle(b)
 	var uc  = GameState.upgrade_cost(b)
 	var ct  = GameState.cycle_time_sec(b)
+	var cap = GameState.get_max_capacity()
 
 	icon_label.text  = b.icon_text
 	name_label.text  = b.name
 	level_label.text = "Lv.%d  +%d💰" % [b.level, gpc]
 
-	if b.ready >= GameState.MAX_READY:
+	if b.ready >= cap:
 		production_bar.value = 100
 		status_label.text    = "ΓΕΜΑΤΟ (%d)!" % b.ready
 	else:
@@ -65,12 +72,11 @@ func _update_ui():
 
 	collect_button.disabled = b.ready == 0
 	collect_button.text = "Συλλογή +%d💰" % (b.ready * gpc) if b.ready > 0 else "Παράγει..."
-	upgrade_button.text = "⬆ %d💰" % uc
+	upgrade_button.text = "⬆ %s💰" % GameState._fmt_number(float(uc))
 	upgrade_button.modulate = Color(1,1,1) if GameState.gold >= uc else Color(.6,.6,.6)
 
 func _on_collect_pressed():
-	var b = GameState.buildings[building_id]
-	if not b.unlocked:
+	if not GameState.buildings[building_id].unlocked:
 		return
 	var earned = GameState.collect(building_id)
 	if earned <= 0:
@@ -89,8 +95,8 @@ func _on_collect_pressed():
 	tw.tween_callback(lbl.queue_free).set_delay(0.8)
 
 func _on_upgrade_pressed():
-	var b = GameState.buildings[building_id]
-	if not b.unlocked:
+	if not GameState.buildings[building_id].unlocked:
+		var b = GameState.buildings[building_id]
 		if GameState.unlock(building_id):
 			_show_unlock_message(b.name)
 		return
@@ -98,7 +104,7 @@ func _on_upgrade_pressed():
 
 func _show_unlock_message(building_name: String):
 	var lbl = Label.new()
-	lbl.text = "Μπράβο! Ξεκλείδωσες το:\n%s!" % building_name
+	lbl.text = "Μπράβο!\nΞεκλείδωσες το:\n%s!" % building_name
 	lbl.add_theme_font_size_override("font_size", 18)
 	lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.1))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
