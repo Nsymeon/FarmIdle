@@ -50,37 +50,37 @@ func auto_tap_upgrade_cost() -> int:
 # ─── Buildings ───────────────────────────────────────────────
 var buildings: Array = [
 	{
-		"id": 0, "name": "Κοτέτσι", "icon_text": "KOTA",
+		"id": 0, "name": "Κοτέτσι", "icon_text": "[KOT]",
 		"level": 1, "base_gold": 2, "cycle_ms": 4000.0,
 		"base_cost": 30, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 100
 	},
 	{
-		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "AGEL",
+		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "[AGE]",
 		"level": 1, "base_gold": 8, "cycle_ms": 10000.0,
 		"base_cost": 80, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 500
 	},
 	{
-		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "SITO",
+		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "[SIT]" ,
 		"level": 1, "base_gold": 20, "cycle_ms": 18000.0,
 		"base_cost": 200, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 3000
 	},
 	{
-		"id": 3, "name": "Μελισσοκομείο", "icon_text": "MELI",
+		"id": 3, "name": "Μελισσοκομείο", "icon_text": "[MEL]",
 		"level": 1, "base_gold": 50, "cycle_ms": 30000.0,
 		"base_cost": 500, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 15000
 	},
 	{
-		"id": 4, "name": "Μποστάνι", "icon_text": "MPOS",
+		"id": 4, "name": "Μποστάνι", "icon_text": "[MPO]",
 		"level": 1, "base_gold": 120, "cycle_ms": 50000.0,
 		"base_cost": 1200, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 60000
 	},
 	{
-		"id": 5, "name": "Αγορά", "icon_text": "AGORA",
+		"id": 5, "name": "Αγορά", "icon_text": "[AGO]",
 		"level": 1, "base_gold": 300, "cycle_ms": 80000.0,
 		"base_cost": 3000, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 200000
@@ -160,7 +160,12 @@ func unlock(building_id: int) -> bool:
 func tap_gold() -> int:
 	var total = 1
 	for b in buildings:
-		if b.unlocked: total += b.level
+		if b.unlocked:
+			total += b.level
+	# Bonus από special upgrades
+	total += auto_collect_level * 2
+	total += max_capacity_level * 3
+	total += auto_tap_level * 2
 	gold += total
 	total_earned += total
 	gold_changed.emit(gold)
