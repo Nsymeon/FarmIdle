@@ -92,6 +92,21 @@ func _on_upgrade_pressed():
 	var b = GameState.buildings[building_id]
 	if not b.unlocked:
 		if GameState.unlock(building_id):
-			_update_ui()
+			_show_unlock_message(b.name)
 		return
 	open_upgrade_card.emit(building_id)
+
+func _show_unlock_message(building_name: String):
+	var lbl = Label.new()
+	lbl.text = "Μπράβο! Ξεκλείδωσες το:\n%s!" % building_name
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.1))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.position = Vector2(size.x / 2.0 - 80.0, -20.0)
+	lbl.z_index = 20
+	add_child(lbl)
+	var tw = create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 100.0, 2.0)
+	tw.tween_property(lbl, "modulate:a", 0.0, 2.0)
+	tw.tween_callback(lbl.queue_free).set_delay(2.0)

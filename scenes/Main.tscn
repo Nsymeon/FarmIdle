@@ -1,7 +1,41 @@
-[gd_scene load_steps=3 format=3 uid="uid://blcjqlxncwygs"]
+[gd_scene load_steps=9 format=3 uid="uid://blcjqlxncwygs"]
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_ckb3c"]
 [ext_resource type="PackedScene" uid="uid://44w0uxtwj0q3" path="res://scenes/UpgradeCard.tscn" id="1_gn4ns"]
+[ext_resource type="Texture2D" uid="uid://oi2auw0p6oc5" path="res://assets/spuros.png" id="2_jn3ck"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fbjtb"]
+bg_color = Color(0.290196, 0.54902, 0.164706, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.533333, 0.8, 0.266667, 1)
+corner_radius_top_left = 40
+corner_radius_top_right = 40
+corner_radius_bottom_right = 40
+corner_radius_bottom_left = 40
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_axtb7"]
+bg_color = Color(0.290196, 0.54902, 0.164706, 1)
+border_width_left = 40
+border_width_top = 40
+border_width_right = 40
+border_width_bottom = 40
+border_color = Color(0.533333, 0.8, 0.266667, 1)
+corner_radius_top_left = 40
+corner_radius_top_right = 40
+corner_radius_bottom_right = 40
+corner_radius_bottom_left = 40
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boi5n"]
+bg_color = Color(0.101961, 0.419608, 0.541176, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xglca"]
+bg_color = Color(0.541176, 0.290196, 0.101961, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6i7bs"]
+bg_color = Color(0.290196, 0.101961, 0.541176, 1)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_ckb3c")
@@ -72,5 +106,53 @@ layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 columns = 2
+
+[node name="BottomBar" type="MarginContainer" parent="UI/Layout"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 16
+
+[node name="TapButton" type="Button" parent="UI/Layout/BottomBar"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+theme_override_styles/hover = SubResource("StyleBoxFlat_fbjtb")
+theme_override_styles/normal = SubResource("StyleBoxFlat_axtb7")
+icon = ExtResource("2_jn3ck")
+expand_icon = true
+
+[node name="SpecialBar" type="MarginContainer" parent="UI/Layout"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="SpecialButtons" type="HBoxContainer" parent="UI/Layout/SpecialBar"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="AutoCollectBtn" type="Button" parent="UI/Layout/SpecialBar/SpecialButtons"]
+custom_minimum_size = Vector2(100, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_boi5n")
+
+[node name="MaxCapBtn" type="Button" parent="UI/Layout/SpecialBar/SpecialButtons"]
+custom_minimum_size = Vector2(100, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_xglca")
+
+[node name="AutoTapBtn" type="Button" parent="UI/Layout/SpecialBar/SpecialButtons"]
+custom_minimum_size = Vector2(100, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_6i7bs")
 
 [node name="UpgradeCard" parent="." instance=ExtResource("1_gn4ns")]

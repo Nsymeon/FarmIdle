@@ -2,50 +2,88 @@ extends Node
 
 signal gold_changed(new_gold: float)
 signal building_updated(id: int)
+signal special_upgraded
 
-var gold: float = 50.0
+var gold: float = 0.0
 var total_earned: float = 0.0
 var last_save_time: int = 0
 
-const MAX_READY = 5
 const SAVE_PATH = "user://savegame.json"
 
+# ─── Special Systems ─────────────────────────────────────────
+var max_capacity_level: int = 1       # capacity = level + 1 (lv1=2, lv2=3...)
+var auto_collect_level: int = 0       # 0 = κλειδωμένο
+var auto_tap_level: int = 0           # 0 = κλειδωμένο
+
+const AUTO_COLLECT_UNLOCK = 5000
+const AUTO_TAP_UNLOCK     = 3000
+
+func get_max_capacity() -> int:
+	match max_capacity_level:
+		1: return 2
+		2: return 3
+		3: return 4
+		4: return 5
+		5: return 7
+		6: return 10
+		_: return min(2 + max_capacity_level, 20)
+
+func max_capacity_upgrade_cost() -> int:
+	return int(8000 * pow(5.0, max_capacity_level - 1))
+
+func auto_collect_interval() -> float:
+	if auto_collect_level <= 0: return 9999.0
+	return max(5.0, 60.0 / float(auto_collect_level))
+
+func auto_collect_upgrade_cost() -> int:
+	if auto_collect_level == 0: return AUTO_COLLECT_UNLOCK
+	return int(2000 * pow(3.0, auto_collect_level - 1))
+
+func auto_tap_interval() -> float:
+	if auto_tap_level <= 0: return 9999.0
+	return max(2.0, 15.0 - float(auto_tap_level - 1) * 2.0)
+
+func auto_tap_upgrade_cost() -> int:
+	if auto_tap_level == 0: return AUTO_TAP_UNLOCK
+	return int(1500 * pow(2.5, auto_tap_level - 1))
+
+# ─── Buildings ───────────────────────────────────────────────
 var buildings: Array = [
 	{
 		"id": 0, "name": "Κοτέτσι", "icon_text": "KOTA",
-		"level": 1, "base_gold": 2, "cycle_ms": 5000.0,
-		"base_cost": 40, "ready": 0, "progress_ms": 0.0,
-		"unlocked": true, "unlock_cost": 0
+		"level": 1, "base_gold": 2, "cycle_ms": 4000.0,
+		"base_cost": 30, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 100
 	},
 	{
 		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "AGEL",
-		"level": 1, "base_gold": 5, "cycle_ms": 10000.0,
-		"base_cost": 100, "ready": 0, "progress_ms": 0.0,
-		"unlocked": false, "unlock_cost": 1000
+		"level": 1, "base_gold": 8, "cycle_ms": 10000.0,
+		"base_cost": 80, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 500
 	},
 	{
 		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "SITO",
-		"level": 1, "base_gold": 3, "cycle_ms": 7000.0,
-		"base_cost": 70, "ready": 0, "progress_ms": 0.0,
-		"unlocked": false, "unlock_cost": 2000
+		"level": 1, "base_gold": 20, "cycle_ms": 18000.0,
+		"base_cost": 200, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 3000
 	},
 	{
 		"id": 3, "name": "Μελισσοκομείο", "icon_text": "MELI",
-		"level": 1, "base_gold": 8, "cycle_ms": 15000.0,
-		"base_cost": 150, "ready": 0, "progress_ms": 0.0,
-		"unlocked": false, "unlock_cost": 5000
+		"level": 1, "base_gold": 50, "cycle_ms": 30000.0,
+		"base_cost": 500, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 15000
 	},
 	{
 		"id": 4, "name": "Μποστάνι", "icon_text": "MPOS",
-		"level": 1, "base_gold": 1, "cycle_ms": 3000.0,
-		"base_cost": 25, "ready": 0, "progress_ms": 0.0,
-		"unlocked": false, "unlock_cost": 10000
+		"level": 1, "base_gold": 120, "cycle_ms": 50000.0,
+		"base_cost": 1200, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 60000
 	},
 	{
 		"id": 5, "name": "Αγορά", "icon_text": "AGORA",
-		"level": 1, "base_gold": 15, "cycle_ms": 20000.0,
-		"base_cost": 200, "ready": 0, "progress_ms": 0.0,
-		"unlocked": false, "unlock_cost": 20000
+		"level": 1, "base_gold": 300, "cycle_ms": 80000.0,
+		"base_cost": 3000, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 200000
 	},
 ]
 
@@ -63,8 +101,7 @@ func cycle_time_sec(b: Dictionary) -> float:
 	return max(1.5, (b.cycle_ms / 1000.0) * pow(0.92, b.level - 1))
 
 func fmt_time(sec: float) -> String:
-	if sec >= 60.0:
-		return "%.1fm" % (sec / 60.0)
+	if sec >= 60.0: return "%.1fm" % (sec / 60.0)
 	return "%.1fs" % sec
 
 func _fmt_number(n: float) -> String:
@@ -74,8 +111,7 @@ func _fmt_number(n: float) -> String:
 
 func collect(building_id: int) -> int:
 	var b = buildings[building_id]
-	if b.ready == 0:
-		return 0
+	if b.ready == 0: return 0
 	var earned = b.ready * gold_per_cycle(b)
 	gold += earned
 	total_earned += earned
@@ -84,11 +120,23 @@ func collect(building_id: int) -> int:
 	save_game()
 	return earned
 
+func collect_all() -> int:
+	var total = 0
+	for b in buildings:
+		if b.unlocked and b.ready > 0:
+			total += b.ready * gold_per_cycle(b)
+			b.ready = 0
+	if total > 0:
+		gold += total
+		total_earned += total
+		gold_changed.emit(gold)
+		save_game()
+	return total
+
 func upgrade(building_id: int) -> bool:
 	var b = buildings[building_id]
 	var cost = upgrade_cost(b)
-	if gold < cost:
-		return false
+	if gold < cost: return false
 	gold -= cost
 	b.level += 1
 	b.progress_ms = 0.0
@@ -100,14 +148,51 @@ func upgrade(building_id: int) -> bool:
 
 func unlock(building_id: int) -> bool:
 	var b = buildings[building_id]
-	if b.unlocked:
-		return false
-	if gold < b.unlock_cost:
-		return false
+	if b.unlocked: return false
+	if gold < b.unlock_cost: return false
 	gold -= b.unlock_cost
 	b.unlocked = true
 	gold_changed.emit(gold)
 	building_updated.emit(building_id)
+	save_game()
+	return true
+
+func tap_gold() -> int:
+	var total = 1
+	for b in buildings:
+		if b.unlocked: total += b.level
+	gold += total
+	total_earned += total
+	gold_changed.emit(gold)
+	return total
+
+func upgrade_max_capacity() -> bool:
+	var cost = max_capacity_upgrade_cost()
+	if gold < cost: return false
+	gold -= cost
+	max_capacity_level += 1
+	gold_changed.emit(gold)
+	special_upgraded.emit()
+	save_game()
+	return true
+
+func upgrade_auto_collect() -> bool:
+	var cost = auto_collect_upgrade_cost()
+	if gold < cost: return false
+	gold -= cost
+	auto_collect_level += 1
+	gold_changed.emit(gold)
+	special_upgraded.emit()
+	save_game()
+	return true
+
+func upgrade_auto_tap() -> bool:
+	var cost = auto_tap_upgrade_cost()
+	if gold < cost: return false
+	gold -= cost
+	auto_tap_level += 1
+	gold_changed.emit(gold)
+	special_upgraded.emit()
 	save_game()
 	return true
 
@@ -117,14 +202,14 @@ func _process_offline_earnings():
 		last_save_time = current_time
 		return
 	var offline_sec = clamp(float(current_time - last_save_time), 0.0, 4.0 * 3600.0)
+	var cap = get_max_capacity()
 	for b in buildings:
-		if not b.unlocked:
-			continue
+		if not b.unlocked: continue
 		var cycle_ms = cycle_time_sec(b) * 1000.0
 		var total_ms = b.progress_ms + (offline_sec * 1000.0)
-		var cycles_done = min(int(total_ms / cycle_ms), MAX_READY - b.ready)
+		var cycles_done = min(int(total_ms / cycle_ms), cap - b.ready)
 		b.ready += cycles_done
-		b.progress_ms = 0.0 if b.ready >= MAX_READY else fmod(total_ms, cycle_ms)
+		b.progress_ms = 0.0 if b.ready >= cap else fmod(total_ms, cycle_ms)
 	last_save_time = current_time
 
 func save_game():
@@ -132,6 +217,9 @@ func save_game():
 	var data = {
 		"gold": gold, "total_earned": total_earned,
 		"last_save_time": last_save_time,
+		"max_capacity_level": max_capacity_level,
+		"auto_collect_level": auto_collect_level,
+		"auto_tap_level": auto_tap_level,
 		"buildings": buildings.duplicate(true)
 	}
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -140,18 +228,18 @@ func save_game():
 		file.close()
 
 func load_game():
-	if not FileAccess.file_exists(SAVE_PATH):
-		return
+	if not FileAccess.file_exists(SAVE_PATH): return
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if not file:
-		return
+	if not file: return
 	var data = JSON.parse_string(file.get_as_text())
 	file.close()
-	if not data is Dictionary:
-		return
+	if not data is Dictionary: return
 	gold = float(data.get("gold", 50.0))
 	total_earned = float(data.get("total_earned", 0.0))
 	last_save_time = int(data.get("last_save_time", 0))
+	max_capacity_level = int(data.get("max_capacity_level", 1))
+	auto_collect_level = int(data.get("auto_collect_level", 0))
+	auto_tap_level = int(data.get("auto_tap_level", 0))
 	var saved = data.get("buildings", [])
 	for i in range(min(saved.size(), buildings.size())):
 		buildings[i].level       = int(saved[i].get("level", 1))
