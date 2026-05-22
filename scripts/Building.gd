@@ -39,7 +39,7 @@ func _process(delta: float):
 
 func _update_locked_ui():
 	var b = GameState.buildings[building_id]
-	icon_label.text  = "[???]"
+	icon_label.text  = "🔒"
 	name_label.text  = b.name
 	level_label.text = "Κλειδωμένο"
 	production_bar.value = 0

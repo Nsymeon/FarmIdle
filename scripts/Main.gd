@@ -15,6 +15,8 @@ var auto_collect_timer: float = 0.0
 var auto_tap_timer: float = 0.0
 
 func _ready():
+	# Βεβαιώσου ότι το Scroll παίρνει όλο τον διαθέσιμο χώρο
+	$UI/Layout/Scroll.size_flags_vertical = Control.SIZE_EXPAND | Control.SIZE_FILL
 	GameState.gold_changed.connect(_update_gold)
 	GameState.special_upgraded.connect(_update_special_buttons)
 	tap_button.pressed.connect(_on_tap_pressed)

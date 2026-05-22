@@ -50,37 +50,37 @@ func auto_tap_upgrade_cost() -> int:
 # ─── Buildings ───────────────────────────────────────────────
 var buildings: Array = [
 	{
-		"id": 0, "name": "Κοτέτσι", "icon_text": "[KOT]",
+		"id": 0, "name": "Κοτέτσι", "icon_text": "🐔",
 		"level": 1, "base_gold": 2, "cycle_ms": 4000.0,
 		"base_cost": 30, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 100
 	},
 	{
-		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "[AGE]",
+		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "🐄",
 		"level": 1, "base_gold": 8, "cycle_ms": 10000.0,
 		"base_cost": 80, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 500
 	},
 	{
-		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "[SIT]" ,
+		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "🌾" ,
 		"level": 1, "base_gold": 20, "cycle_ms": 18000.0,
 		"base_cost": 200, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 3000
 	},
 	{
-		"id": 3, "name": "Μελισσοκομείο", "icon_text": "[MEL]",
+		"id": 3, "name": "Μελισσοκομείο", "icon_text": "🍯",
 		"level": 1, "base_gold": 50, "cycle_ms": 30000.0,
 		"base_cost": 500, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 15000
 	},
 	{
-		"id": 4, "name": "Μποστάνι", "icon_text": "[MPO]",
+		"id": 4, "name": "Μποστάνι", "icon_text": "🫐",
 		"level": 1, "base_gold": 120, "cycle_ms": 50000.0,
 		"base_cost": 1200, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 60000
 	},
 	{
-		"id": 5, "name": "Αγορά", "icon_text": "[AGO]",
+		"id": 5, "name": "Αγορά", "icon_text": "🏪",
 		"level": 1, "base_gold": 300, "cycle_ms": 80000.0,
 		"base_cost": 3000, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 200000
