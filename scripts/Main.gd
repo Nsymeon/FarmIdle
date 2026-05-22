@@ -8,6 +8,7 @@ extends Node2D
 @onready var auto_collect_btn = $UI/Layout/SpecialBar/SpecialButtons/AutoCollectBtn
 @onready var max_cap_btn      = $UI/Layout/SpecialBar/SpecialButtons/MaxCapBtn
 @onready var auto_tap_btn     = $UI/Layout/SpecialBar/SpecialButtons/AutoTapBtn
+var tap_rotation_deg: float = 0.0
 
 const BuildingScene = preload("res://scenes/Building.tscn")
 
@@ -84,7 +85,12 @@ func _process(delta: float):
 # ─────────────────────────────────────────────────────────────
 func _on_tap_pressed():
 	var earned = GameState.tap_gold()
-	_show_float("+%d" % earned, Color(0.3, 0.7, 1.0))
+	# Περιστροφή +1 μοίρα
+	tap_rotation_deg += 1.0
+	tap_button.pivot_offset = tap_button.size / 2.0
+	tap_button.rotation_degrees = tap_rotation_deg
+	# Εμφάνισε το emoji αντί για κείμενο
+	_show_float("💧", Color(0.3, 0.7, 1.0))
 
 # Tap gold = 1 base
 #          + sum of building levels
