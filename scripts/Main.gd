@@ -45,9 +45,14 @@ func _ready():
 	style_hover.bg_color = Color("#5da334")
 	var style_pressed = style_normal.duplicate()
 	style_pressed.bg_color = Color("#3a7020")
+	tap_button.text = "💧"
+	tap_button.add_theme_font_size_override("font_size", 28)
 	tap_button.add_theme_stylebox_override("normal",  style_normal)
 	tap_button.add_theme_stylebox_override("hover",   style_hover)
 	tap_button.add_theme_stylebox_override("pressed", style_pressed)
+	var style_focus = StyleBoxEmpty.new()
+	tap_button.add_theme_stylebox_override("focus", style_focus)
+	tap_button.focus_mode = Control.FOCUS_NONE
 	tap_button.custom_minimum_size = Vector2(90, 90)
 
 	for b in GameState.buildings:
@@ -85,12 +90,10 @@ func _process(delta: float):
 # ─────────────────────────────────────────────────────────────
 func _on_tap_pressed():
 	var earned = GameState.tap_gold()
-	# Περιστροφή +1 μοίρα
 	tap_rotation_deg += 1.0
 	tap_button.pivot_offset = tap_button.size / 2.0
 	tap_button.rotation_degrees = tap_rotation_deg
-	# Εμφάνισε το emoji αντί για κείμενο
-	_show_float("💧", Color(0.3, 0.7, 1.0))
+	_show_float("💧 +%d" % earned, Color(0.3, 0.7, 1.0))
 
 # Tap gold = 1 base
 #          + sum of building levels
@@ -196,7 +199,7 @@ func _check_game_complete():
 		return
 	if GameState.auto_tap_level == 0:
 		return
-	_show_demo_complete()
+	upgrade_card.open_demo_complete()
 
 func _show_demo_complete():
 	var overlay = ColorRect.new()

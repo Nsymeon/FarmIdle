@@ -67,7 +67,10 @@ func _fill_grid(grid: GridContainer, b: Dictionary, prev):
 		grid.add_child(v)
 
 func _on_upgrade():
-	if GameState.upgrade(_id): _refresh()
+	if _current_id < 0:
+		_on_close()
+		return
+	if GameState.upgrade(_current_id): _refresh()
 
 func _on_close():
 	hide()
@@ -76,3 +79,23 @@ func _on_close():
 func _input(event):
 	if visible and event.is_action_pressed("ui_cancel"):
 		_on_close()
+
+
+func open_demo_complete():
+	_current_id = -1
+	b_icon.text = "🏆"
+	b_name.text = "Συγχαρητήρια!"
+	b_level.text = "Έφτασες στο τέλος του demo!"
+	for c in grid_now.get_children(): c.queue_free()
+	for c in grid_next.get_children(): c.queue_free()
+	_fill_grid(grid_now, {"base_gold": 0, "level": 0, "cycle_ms": 1000.0}, null)
+	# Χρησιμοποίησε τα labels απευθείας
+	var lbl = Label.new()
+	lbl.text = "Ευχαριστούμε που παίξατε!\nΕλπίζουμε να σας άρεσε! 🌾"
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 14)
+	grid_now.add_child(lbl)
+	upgrade_btn.text = "Κλείσιμο"
+	upgrade_btn.disabled = false
+	upgrade_btn.modulate = Color(1, 1, 1)
+	show()
