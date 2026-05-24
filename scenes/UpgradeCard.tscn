@@ -4,6 +4,7 @@
 
 [node name="UpgradeCard" type="CanvasLayer"]
 layer = 10
+visible = false
 script = ExtResource("1_yjv6s")
 
 [node name="Overlay" type="ColorRect" parent="."]

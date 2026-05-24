@@ -10,10 +10,9 @@ var last_save_time: int = 0
 
 const SAVE_PATH = "user://savegame.json"
 
-# ─── Special Systems ─────────────────────────────────────────
-var max_capacity_level: int = 1       # capacity = level + 1 (lv1=2, lv2=3...)
-var auto_collect_level: int = 0       # 0 = κλειδωμένο
-var auto_tap_level: int = 0           # 0 = κλειδωμένο
+var max_capacity_level: int = 1
+var auto_collect_level: int = 0
+var auto_tap_level: int = 0
 
 const AUTO_COLLECT_UNLOCK = 5000
 const AUTO_TAP_UNLOCK     = 3000
@@ -47,43 +46,90 @@ func auto_tap_upgrade_cost() -> int:
 	if auto_tap_level == 0: return AUTO_TAP_UNLOCK
 	return int(1500 * pow(2.5, auto_tap_level - 1))
 
-# ─── Buildings ───────────────────────────────────────────────
 var buildings: Array = [
 	{
 		"id": 0, "name": "Κοτέτσι", "icon_text": "🐔",
+		"color": "#8B4513",
 		"level": 1, "base_gold": 2, "cycle_ms": 4000.0,
 		"base_cost": 30, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 100
 	},
 	{
 		"id": 1, "name": "Στάβλος Αγελάδας", "icon_text": "🐄",
+		"color": "#556B2F",
 		"level": 1, "base_gold": 8, "cycle_ms": 10000.0,
 		"base_cost": 80, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 500
 	},
 	{
-		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "🌾" ,
+		"id": 2, "name": "Χωράφι Σιταριού", "icon_text": "🌾",
+		"color": "#DAA520",
 		"level": 1, "base_gold": 20, "cycle_ms": 18000.0,
 		"base_cost": 200, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 3000
 	},
 	{
 		"id": 3, "name": "Μελισσοκομείο", "icon_text": "🍯",
+		"color": "#FF8C00",
 		"level": 1, "base_gold": 50, "cycle_ms": 30000.0,
 		"base_cost": 500, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 15000
 	},
 	{
 		"id": 4, "name": "Μποστάνι", "icon_text": "🫐",
+		"color": "#4B0082",
 		"level": 1, "base_gold": 120, "cycle_ms": 50000.0,
 		"base_cost": 1200, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 60000
 	},
 	{
 		"id": 5, "name": "Αγορά", "icon_text": "🏪",
+		"color": "#2E8B57",
 		"level": 1, "base_gold": 300, "cycle_ms": 80000.0,
 		"base_cost": 3000, "ready": 0, "progress_ms": 0.0,
 		"unlocked": false, "unlock_cost": 200000
+	},
+	{
+		"id": 6, "name": "Ελαιώνας", "icon_text": "🫒",
+		"color": "#6B8E23",
+		"level": 1, "base_gold": 800, "cycle_ms": 100000.0,
+		"base_cost": 8000, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 800000
+	},
+	{
+		"id": 7, "name": "Αμπελώνας", "icon_text": "🍇",
+		"color": "#800080",
+		"level": 1, "base_gold": 2000, "cycle_ms": 120000.0,
+		"base_cost": 20000, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 3000000
+	},
+	{
+		"id": 8, "name": "Λιμάνι Αλιείας", "icon_text": "🐟",
+		"color": "#1E90FF",
+		"level": 1, "base_gold": 5000, "cycle_ms": 150000.0,
+		"base_cost": 50000, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 10000000
+	},
+	{
+		"id": 9, "name": "Ορυχείο", "icon_text": "⛏️",
+		"color": "#708090",
+		"level": 1, "base_gold": 15000, "cycle_ms": 200000.0,
+		"base_cost": 150000, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 50000000
+	},
+	{
+		"id": 10, "name": "Εργοστάσιο", "icon_text": "🏭",
+		"color": "#B22222",
+		"level": 1, "base_gold": 40000, "cycle_ms": 250000.0,
+		"base_cost": 400000, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 200000000
+	},
+	{
+		"id": 11, "name": "Χρηματιστήριο", "icon_text": "📈",
+		"color": "#FFD700",
+		"level": 1, "base_gold": 120000, "cycle_ms": 300000.0,
+		"base_cost": 1200000, "ready": 0, "progress_ms": 0.0,
+		"unlocked": false, "unlock_cost": 1000000000
 	},
 ]
 
@@ -101,12 +147,14 @@ func cycle_time_sec(b: Dictionary) -> float:
 	return max(1.5, (b.cycle_ms / 1000.0) * pow(0.92, b.level - 1))
 
 func fmt_time(sec: float) -> String:
-	if sec >= 60.0: return "%.1fm" % (sec / 60.0)
+	if sec >= 3600.0: return "%.1fh" % (sec / 3600.0)
+	if sec >= 60.0:   return "%.1fm" % (sec / 60.0)
 	return "%.1fs" % sec
 
 func _fmt_number(n: float) -> String:
-	if n >= 1_000_000: return "%.1fM" % (n / 1_000_000.0)
-	if n >= 1_000:     return "%.1fK" % (n / 1_000.0)
+	if n >= 1_000_000_000: return "%.1fB" % (n / 1_000_000_000.0)
+	if n >= 1_000_000:     return "%.1fM" % (n / 1_000_000.0)
+	if n >= 1_000:         return "%.1fK" % (n / 1_000.0)
 	return str(int(n))
 
 func collect(building_id: int) -> int:
@@ -160,12 +208,7 @@ func unlock(building_id: int) -> bool:
 func tap_gold() -> int:
 	var total = 1
 	for b in buildings:
-		if b.unlocked:
-			total += b.level
-	# Bonus από special upgrades
-	total += auto_collect_level * 2
-	total += max_capacity_level * 3
-	total += auto_tap_level * 2
+		if b.unlocked: total += b.level
 	gold += total
 	total_earned += total
 	gold_changed.emit(gold)
@@ -206,7 +249,7 @@ func _process_offline_earnings():
 	if last_save_time == 0:
 		last_save_time = current_time
 		return
-	var offline_sec = clamp(float(current_time - last_save_time), 0.0, 4.0 * 3600.0)
+	var offline_sec = clamp(float(current_time - last_save_time), 0.0, 8.0 * 3600.0)
 	var cap = get_max_capacity()
 	for b in buildings:
 		if not b.unlocked: continue
@@ -239,7 +282,7 @@ func load_game():
 	var data = JSON.parse_string(file.get_as_text())
 	file.close()
 	if not data is Dictionary: return
-	gold = float(data.get("gold", 50.0))
+	gold = float(data.get("gold", 0.0))
 	total_earned = float(data.get("total_earned", 0.0))
 	last_save_time = int(data.get("last_save_time", 0))
 	max_capacity_level = int(data.get("max_capacity_level", 1))
@@ -250,7 +293,7 @@ func load_game():
 		buildings[i].level       = int(saved[i].get("level", 1))
 		buildings[i].ready       = int(saved[i].get("ready", 0))
 		buildings[i].progress_ms = float(saved[i].get("progress_ms", 0.0))
-		buildings[i].unlocked    = bool(saved[i].get("unlocked", i == 0))
+		buildings[i].unlocked    = bool(saved[i].get("unlocked", false))
 
 func _notification(what: int):
 	if what == NOTIFICATION_APPLICATION_PAUSED:
