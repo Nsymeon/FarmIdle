@@ -103,8 +103,8 @@ vertical_scroll_mode = 3
 
 [node name="Grid" type="GridContainer" parent="UI/Layout/Scroll"]
 layout_mode = 2
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
 columns = 2
 
 [node name="BottomBar" type="MarginContainer" parent="UI/Layout"]

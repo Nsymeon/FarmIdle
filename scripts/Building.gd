@@ -126,8 +126,9 @@ func _update_ui():
 	var cap = GameState.get_max_capacity()
 	var base_color = Color(b.color)
 
-	# Restore colored card style if it was locked before
-	_apply_card_style()
+	# Restore style μόνο αν δεν έχει εφαρμοστεί ήδη
+	if not has_theme_stylebox_override("panel"):
+		_apply_card_style()
 
 	icon_label.text  = b.icon_text
 	name_label.text  = b.name

@@ -4,6 +4,7 @@
 [ext_resource type="FontFile" uid="uid://ian6sav6xc6k" path="res://assets/NotoColorEmoji.ttf" id="2_jdt5n"]
 
 [node name="Building" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 220)
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("1_si6tq")
@@ -20,16 +21,16 @@ layout_mode = 2
 theme_override_constants/separation = 4
 
 [node name="IconLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 45)
+custom_minimum_size = Vector2(0, 55)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_jdt5n")
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 42
 text = "🐔"
 horizontal_alignment = 1
 
 [node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 13
 text = "Κτήριο"
 horizontal_alignment = 1
 
@@ -52,11 +53,11 @@ text = "5.0 s"
 horizontal_alignment = 1
 
 [node name="CollectButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 text = "Συλλογή"
 
 [node name="UpgradeButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 text = "⬆ Αναβάθμιση"

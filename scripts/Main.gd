@@ -61,31 +61,34 @@ func _style_top_bar():
 	title.add_theme_font_size_override("font_size", 20)
 
 func _style_tap_button():
-	tap_button.text = "💧"
-	tap_button.add_theme_font_size_override("font_size", 30)
 	tap_button.focus_mode = Control.FOCUS_NONE
-	tap_button.custom_minimum_size = Vector2(90, 90)
-
+	tap_button.custom_minimum_size = Vector2(100, 100)
+	tap_button.text = ""
+	# Φόρτωσε την εικόνα
+	var tex = load("res://assets/spuros.png")
+	if tex:
+		tap_button.icon = tex
+		tap_button.expand_icon = true
+	
 	var mk_style = func(color: Color) -> StyleBoxFlat:
 		var s = StyleBoxFlat.new()
 		s.bg_color = color
-		s.corner_radius_top_left = 45
-		s.corner_radius_top_right = 45
-		s.corner_radius_bottom_left = 45
-		s.corner_radius_bottom_right = 45
-		s.border_color = color.lightened(0.3)
+		s.corner_radius_top_left = 50
+		s.corner_radius_top_right = 50
+		s.corner_radius_bottom_left = 50
+		s.corner_radius_bottom_right = 50
+		s.border_color = color.lightened(0.4)
 		s.border_width_top = 3
 		s.border_width_bottom = 3
 		s.border_width_left = 3
 		s.border_width_right = 3
-		s.shadow_color = Color(0, 0, 0, 0.4)
-		s.shadow_size = 6
 		return s
-
+	
 	tap_button.add_theme_stylebox_override("normal",  mk_style.call(Color("#1a6b8a")))
 	tap_button.add_theme_stylebox_override("hover",   mk_style.call(Color("#2080aa")))
 	tap_button.add_theme_stylebox_override("pressed", mk_style.call(Color("#0e4d66")))
 	tap_button.add_theme_stylebox_override("focus",   StyleBoxEmpty.new())
+
 
 func _style_special_buttons():
 	var colors = [Color("#1a6b8a"), Color("#7a3b0e"), Color("#4a1a8a")]
@@ -142,8 +145,7 @@ func _on_tap_pressed():
 	tap_rotation_deg += 1.0
 	tap_button.pivot_offset = tap_button.size / 2.0
 	tap_button.rotation_degrees = tap_rotation_deg
-	_show_float("💧 +%d" % earned, Color(0.4, 0.8, 1.0))
-
+	_show_float("+%d 💰" % earned, Color(0.4, 0.8, 1.0))
 # ─── Special Buttons ─────────────────────────────────────────
 
 func _on_auto_collect_upgrade():
