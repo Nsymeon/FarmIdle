@@ -332,10 +332,13 @@ func load_game():
 	if not FileAccess.file_exists(SAVE_PATH): return
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if not file: return
-	var text = file.get_as_text()
+	var data = JSON.parse_string(file.get_as_text())
 	file.close()
-	var data = JSON.parse_string(text)
 	if not data is Dictionary: return
+	# Αν είναι παλιό save χωρίς version, διέγραψέ το
+	if not data.has("version"):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+		return
 
 	gold               = float(data.get("gold", 0.0))
 	total_earned       = float(data.get("total_earned", 0.0))
