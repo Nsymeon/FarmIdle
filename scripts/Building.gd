@@ -10,7 +10,7 @@ extends PanelContainer
 @onready var collect_button = $MarginContainer/VBoxContainer/CollectButton
 @onready var upgrade_button = $MarginContainer/VBoxContainer/UpgradeButton
 
-signal open_upgrade_card(id: int)
+#signal open_upgrade_card(id: int)
 
 var _was_unlocked: bool = false
 
@@ -187,8 +187,10 @@ func _on_upgrade_pressed():
 		if GameState.unlock(building_id):
 			_show_unlock_message(b.name)
 		return
-	# Είναι ξεκλειδωμένο — άνοιξε το upgrade popup
-	open_upgrade_card.emit(building_id)
+	# Βρες το UpgradeCard απευθείας από το scene tree
+	var upgrade_card = get_tree().current_scene.get_node("UpgradeCard")
+	if upgrade_card:
+		upgrade_card.open_for(building_id)
 
 func _spawn_float(msg: String, color: Color):
 	var lbl = Label.new()

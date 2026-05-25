@@ -32,7 +32,7 @@ func _ready():
 		upgrade_card.hide()
 		var card = BuildingScene.instantiate()
 		card.building_id = b.id
-		card.open_upgrade_card.connect(func(id): upgrade_card.open_for(id))
+	#	card.open_upgrade_card.connect(func(id): upgrade_card.open_for(id))
 		grid.add_child(card)
 
 	_update_gold(GameState.gold)
