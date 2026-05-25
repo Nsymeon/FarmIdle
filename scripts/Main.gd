@@ -17,6 +17,9 @@ var tap_rotation_deg: float = 0.0
 var _demo_shown: bool = false
 
 func _ready():
+	# Fix layout sizes programmatically
+	_fix_layout()
+
 	GameState.gold_changed.connect(_update_gold)
 	GameState.special_upgraded.connect(_update_special_buttons)
 
@@ -28,7 +31,6 @@ func _ready():
 	_style_top_bar()
 	_style_tap_button()
 	_style_special_buttons()
-	_style_background()
 
 	for b in GameState.buildings:
 		var card = BuildingScene.instantiate()
@@ -39,21 +41,50 @@ func _ready():
 	_update_gold(GameState.gold)
 	_update_special_buttons()
 
-	# Αν το demo ήταν ήδη complete από προηγούμενο save
 	if GameState.demo_complete:
 		_demo_shown = true
 
-# ─── Background ──────────────────────────────────────────────
+func _fix_layout():
+	var vp = get_viewport().get_visible_rect().size
 
-func _style_background():
-	var bg = $UI
-	# Σκοτεινό πράσινο-γκρι background
-	var canvas_bg = ColorRect.new()
-	canvas_bg.color = Color(0.06, 0.09, 0.06)
-	canvas_bg.anchor_right = 1.0
-	canvas_bg.anchor_bottom = 1.0
-	canvas_bg.z_index = -1
-	add_child(canvas_bg)
+	# Root UI
+	var ui = $UI
+	ui.layer = 1
+
+	# Layout VBoxContainer — full screen
+	var layout = $UI/Layout
+	layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+
+	# TopBar — fixed height
+	var topbar = $UI/Layout/TopBar
+	topbar.custom_minimum_size = Vector2(0, 80)
+	topbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# Scroll — takes all remaining space
+	var scroll = $UI/Layout/Scroll
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode   = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+
+	# Grid inside scroll
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.size_flags_vertical   = Control.SIZE_SHRINK_BEGIN
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+
+	# BottomBar
+	var bottom = $UI/Layout/BottomBar
+	bottom.custom_minimum_size = Vector2(0, 115)
+	bottom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# SpecialBar
+	var special = $UI/Layout/SpecialBar
+	special.custom_minimum_size = Vector2(0, 100)
+	special.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 # ─── Top Bar ─────────────────────────────────────────────────
 
@@ -67,8 +98,10 @@ func _style_top_bar():
 
 	gold_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.2))
 	gold_label.add_theme_font_size_override("font_size", 26)
+	gold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	total_label.add_theme_color_override("font_color", Color(0.55, 0.75, 0.45))
 	total_label.add_theme_font_size_override("font_size", 11)
+	total_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 
 	var title = $UI/Layout/TopBar/MarginContainer/HBoxContainer/TitleLabel
 	if title:
@@ -80,27 +113,40 @@ func _style_top_bar():
 func _style_tap_button():
 	tap_button.focus_mode = Control.FOCUS_NONE
 	tap_button.custom_minimum_size = Vector2(100, 100)
+	tap_button.size = Vector2(100, 100)
 	tap_button.text = ""
+
+	# Φόρτωσε εικόνα
 	var tex = load("res://assets/spuros.png")
 	if tex:
 		tap_button.icon = tex
 		tap_button.expand_icon = true
 
+	# Κυκλικό style — χωρίς τετράγωνο outline
 	var mk = func(col: Color) -> StyleBoxFlat:
 		var s = StyleBoxFlat.new()
 		s.bg_color = col
-		s.corner_radius_top_left = s.corner_radius_top_right = 50
-		s.corner_radius_bottom_left = s.corner_radius_bottom_right = 50
-		s.border_color = col.lightened(0.35)
-		s.border_width_top = s.border_width_bottom = s.border_width_left = s.border_width_right = 3
-		s.shadow_color = Color(0, 0, 0, 0.5)
-		s.shadow_size = 8
+		s.corner_radius_top_left    = 50
+		s.corner_radius_top_right   = 50
+		s.corner_radius_bottom_left = 50
+		s.corner_radius_bottom_right = 50
+		s.border_color = col.lightened(0.4)
+		s.border_width_top    = 3
+		s.border_width_bottom = 3
+		s.border_width_left   = 3
+		s.border_width_right  = 3
+		s.shadow_color = Color(0, 0, 0, 0.45)
+		s.shadow_size  = 8
 		return s
 
-	tap_button.add_theme_stylebox_override("normal",  mk.call(Color("#1a6b8a")))
-	tap_button.add_theme_stylebox_override("hover",   mk.call(Color("#2285aa")))
-	tap_button.add_theme_stylebox_override("pressed", mk.call(Color("#0d4d66")))
-	tap_button.add_theme_stylebox_override("focus",   StyleBoxEmpty.new())
+	tap_button.add_theme_stylebox_override("normal",   mk.call(Color("#1a6b8a")))
+	tap_button.add_theme_stylebox_override("hover",    mk.call(Color("#2285aa")))
+	tap_button.add_theme_stylebox_override("pressed",  mk.call(Color("#0d4d66")))
+	tap_button.add_theme_stylebox_override("focus",    StyleBoxEmpty.new())
+	tap_button.add_theme_stylebox_override("disabled", StyleBoxEmpty.new())
+
+	# Σημαντικό: αφαίρεσε το default panel style που κάνει το τετράγωνο
+	tap_button.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 # ─── Special Buttons ─────────────────────────────────────────
 
@@ -114,20 +160,24 @@ func _style_special_buttons():
 		btn.custom_minimum_size = Vector2(108, 88)
 		btn.add_theme_font_size_override("font_size", 10)
 		btn.add_theme_color_override("font_color", Color.WHITE)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		var mk = func(col: Color) -> StyleBoxFlat:
 			var s = StyleBoxFlat.new()
 			s.bg_color = col
-			s.corner_radius_top_left = s.corner_radius_top_right = 10
-			s.corner_radius_bottom_left = s.corner_radius_bottom_right = 10
+			s.corner_radius_top_left    = 10
+			s.corner_radius_top_right   = 10
+			s.corner_radius_bottom_left = 10
+			s.corner_radius_bottom_right = 10
 			s.border_color = col.lightened(0.3)
-			s.border_width_top = s.border_width_bottom = s.border_width_left = s.border_width_right = 1
+			s.border_width_top = s.border_width_bottom = 1
+			s.border_width_left = s.border_width_right = 1
 			return s
 
-		btn.add_theme_stylebox_override("normal",  mk.call(c))
-		btn.add_theme_stylebox_override("hover",   mk.call(c.lightened(0.12)))
-		btn.add_theme_stylebox_override("pressed", mk.call(c.darkened(0.2)))
-		btn.add_theme_stylebox_override("focus",   StyleBoxEmpty.new())
+		btn.add_theme_stylebox_override("normal",   mk.call(c))
+		btn.add_theme_stylebox_override("hover",    mk.call(c.lightened(0.12)))
+		btn.add_theme_stylebox_override("pressed",  mk.call(c.darkened(0.2)))
+		btn.add_theme_stylebox_override("focus",    StyleBoxEmpty.new())
 
 # ─── Process ─────────────────────────────────────────────────
 
@@ -156,20 +206,20 @@ func _on_tap_pressed():
 	tap_button.rotation_degrees = tap_rotation_deg
 	_show_float("💧 +%d" % earned, Color(0.4, 0.85, 1.0))
 
-# ─── Special Button Actions ───────────────────────────────────
+# ─── Special Actions ─────────────────────────────────────────
 
 func _on_auto_collect_upgrade():
 	var was_zero = GameState.auto_collect_level == 0
 	if GameState.upgrade_auto_collect():
 		if was_zero:
-			_show_float("🎉 Αυτο-Συλλογή ξεκλειδώθηκε!", Color(0.3, 1.0, 0.8))
+			_show_float("🎉 Αυτο-Συλλογή!", Color(0.3, 1.0, 0.8))
 		_check_game_complete()
 	else:
 		_show_float("Χρειάζεσαι %s 💰" % GameState.fmt_number(float(GameState.auto_collect_upgrade_cost())), Color(1.0, 0.3, 0.3))
 
 func _on_max_cap_upgrade():
 	if GameState.upgrade_max_capacity():
-		_show_float("📦 Χωρητικότητα x%d!" % GameState.get_max_capacity(), Color(1.0, 0.7, 0.2))
+		_show_float("📦 x%d!" % GameState.get_max_capacity(), Color(1.0, 0.7, 0.2))
 		_check_game_complete()
 	else:
 		_show_float("Χρειάζεσαι %s 💰" % GameState.fmt_number(float(GameState.max_capacity_upgrade_cost())), Color(1.0, 0.3, 0.3))
@@ -178,16 +228,15 @@ func _on_auto_tap_upgrade():
 	var was_zero = GameState.auto_tap_level == 0
 	if GameState.upgrade_auto_tap():
 		if was_zero:
-			_show_float("🎉 Αυτο-Πάτημα ξεκλειδώθηκε!", Color(0.8, 0.3, 1.0))
+			_show_float("🎉 Αυτο-Πάτημα!", Color(0.8, 0.3, 1.0))
 		_check_game_complete()
 	else:
 		_show_float("Χρειάζεσαι %s 💰" % GameState.fmt_number(float(GameState.auto_tap_upgrade_cost())), Color(1.0, 0.3, 0.3))
 
-# ─── Special Buttons UI ───────────────────────────────────────
+# ─── Special Buttons UI ──────────────────────────────────────
 
 func _update_special_buttons():
-	# Auto Collect
-	var ac = GameState.auto_collect_level
+	var ac   = GameState.auto_collect_level
 	var ac_c = GameState.auto_collect_upgrade_cost()
 	auto_collect_btn.text = (
 		"🌾 Αυτο-\nΣυλλογή\n🔓 %s💰" % GameState.fmt_number(float(ac_c))
@@ -196,7 +245,6 @@ func _update_special_buttons():
 	)
 	auto_collect_btn.modulate = Color(1,1,1) if GameState.gold >= ac_c else Color(0.5,0.5,0.5)
 
-	# Max Capacity
 	var mc_c = GameState.max_capacity_upgrade_cost()
 	max_cap_btn.text = "📦 Χωρητ.\nLv%d | x%d\n+%s💰" % [
 		GameState.max_capacity_level,
@@ -205,8 +253,7 @@ func _update_special_buttons():
 	]
 	max_cap_btn.modulate = Color(1,1,1) if GameState.gold >= mc_c else Color(0.5,0.5,0.5)
 
-	# Auto Tap
-	var at = GameState.auto_tap_level
+	var at   = GameState.auto_tap_level
 	var at_c = GameState.auto_tap_upgrade_cost()
 	auto_tap_btn.text = (
 		"💧 Αυτο-\nΠάτημα\n🔓 %s💰" % GameState.fmt_number(float(at_c))
@@ -215,14 +262,14 @@ func _update_special_buttons():
 	)
 	auto_tap_btn.modulate = Color(1,1,1) if GameState.gold >= at_c else Color(0.5,0.5,0.5)
 
-# ─── Gold Display ─────────────────────────────────────────────
+# ─── Gold Display ────────────────────────────────────────────
 
 func _update_gold(_v):
 	gold_label.text  = "%s 💰" % GameState.fmt_number(GameState.gold)
 	total_label.text = "Σύνολο: %s 💰" % GameState.fmt_number(GameState.total_earned)
 	_update_special_buttons()
 
-# ─── Float Text ───────────────────────────────────────────────
+# ─── Float Text ──────────────────────────────────────────────
 
 func _show_float(msg: String, color: Color):
 	var lbl = Label.new()
@@ -247,7 +294,7 @@ func _check_game_complete():
 	_demo_shown = true
 	upgrade_card.open_demo_complete()
 
-# ─── Notifications ────────────────────────────────────────────
+# ─── Notifications ───────────────────────────────────────────
 
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
