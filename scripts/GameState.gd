@@ -135,6 +135,12 @@ var buildings: Array = [
 ]
 
 func _ready():
+#	load_game()
+#	_process_offline_earnings()
+
+	# Καθάρισε παλιό save για fresh start
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	load_game()
 	_process_offline_earnings()
 
