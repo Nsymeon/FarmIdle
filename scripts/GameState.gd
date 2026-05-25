@@ -7,6 +7,7 @@ signal special_upgraded
 var gold: float = 0.0
 var total_earned: float = 0.0
 var last_save_time: int = 0
+var demo_complete: bool = false
 
 const SAVE_PATH = "user://savegame.json"
 
@@ -129,7 +130,7 @@ var buildings: Array = [
 		"color": "#FFD700",
 		"level": 1, "base_gold": 120000, "cycle_ms": 300000.0,
 		"base_cost": 1200000, "ready": 0, "progress_ms": 0.0,
-		"unlocked": false, "unlock_cost": 1000000000
+		"unlocked": false, "unlock_cost": 50000000
 	},
 ]
 
@@ -151,11 +152,15 @@ func fmt_time(sec: float) -> String:
 	if sec >= 60.0:   return "%.1fm" % (sec / 60.0)
 	return "%.1fs" % sec
 
-func _fmt_number(n: float) -> String:
+func fmt_number(n: float) -> String:
 	if n >= 1_000_000_000: return "%.1fB" % (n / 1_000_000_000.0)
 	if n >= 1_000_000:     return "%.1fM" % (n / 1_000_000.0)
 	if n >= 1_000:         return "%.1fK" % (n / 1_000.0)
 	return str(int(n))
+
+# Alias για συμβατότητα με παλιό κώδικα
+func _fmt_number(n: float) -> String:
+	return fmt_number(n)
 
 func collect(building_id: int) -> int:
 	var b = buildings[building_id]
@@ -244,32 +249,80 @@ func upgrade_auto_tap() -> bool:
 	save_game()
 	return true
 
+func check_all_unlocked() -> bool:
+	if demo_complete: return true
+	for b in buildings:
+		if not b.unlocked: return false
+	if auto_collect_level == 0: return false
+	if auto_tap_level == 0: return false
+	demo_complete = true
+	save_game()
+	return true
+
+func reset_game():
+	gold = 0.0
+	total_earned = 0.0
+	last_save_time = 0
+	demo_complete = false
+	max_capacity_level = 1
+	auto_collect_level = 0
+	auto_tap_level = 0
+	for i in range(buildings.size()):
+		buildings[i].level = 1
+		buildings[i].ready = 0
+		buildings[i].progress_ms = 0.0
+		buildings[i].unlocked = false
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	gold_changed.emit(gold)
+	special_upgraded.emit()
+
 func _process_offline_earnings():
 	var current_time = int(Time.get_unix_time_from_system())
 	if last_save_time == 0:
 		last_save_time = current_time
 		return
 	var offline_sec = clamp(float(current_time - last_save_time), 0.0, 8.0 * 3600.0)
+	if offline_sec < 1.0:
+		return
 	var cap = get_max_capacity()
 	for b in buildings:
 		if not b.unlocked: continue
-		var cycle_ms = cycle_time_sec(b) * 1000.0
-		var total_ms = b.progress_ms + (offline_sec * 1000.0)
-		var cycles_done = min(int(total_ms / cycle_ms), cap - b.ready)
-		b.ready += cycles_done
-		b.progress_ms = 0.0 if b.ready >= cap else fmod(total_ms, cycle_ms)
+		var cycle_sec = cycle_time_sec(b)
+		# Σωστός υπολογισμός — δουλεύει και αν cycle > offline
+		var total_sec = (b.progress_ms / 1000.0) + offline_sec
+		var cycles_done = int(total_sec / cycle_sec)
+		var space = cap - b.ready
+		cycles_done = min(cycles_done, space)
+		if cycles_done > 0:
+			b.ready += cycles_done
+		if b.ready < cap:
+			b.progress_ms = fmod(total_sec, cycle_sec) * 1000.0
+		else:
+			b.progress_ms = 0.0
 	last_save_time = current_time
 
 func save_game():
 	last_save_time = int(Time.get_unix_time_from_system())
 	var data = {
-		"gold": gold, "total_earned": total_earned,
+		"version": 2,
+		"gold": gold,
+		"total_earned": total_earned,
 		"last_save_time": last_save_time,
+		"demo_complete": demo_complete,
 		"max_capacity_level": max_capacity_level,
 		"auto_collect_level": auto_collect_level,
 		"auto_tap_level": auto_tap_level,
-		"buildings": buildings.duplicate(true)
+		"buildings": []
 	}
+	for b in buildings:
+		data.buildings.append({
+			"id": b.id,
+			"level": b.level,
+			"ready": b.ready,
+			"progress_ms": b.progress_ms,
+			"unlocked": b.unlocked
+		})
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
@@ -279,21 +332,32 @@ func load_game():
 	if not FileAccess.file_exists(SAVE_PATH): return
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if not file: return
-	var data = JSON.parse_string(file.get_as_text())
+	var text = file.get_as_text()
 	file.close()
+	var data = JSON.parse_string(text)
 	if not data is Dictionary: return
-	gold = float(data.get("gold", 0.0))
-	total_earned = float(data.get("total_earned", 0.0))
-	last_save_time = int(data.get("last_save_time", 0))
+
+	gold               = float(data.get("gold", 0.0))
+	total_earned       = float(data.get("total_earned", 0.0))
+	last_save_time     = int(data.get("last_save_time", 0))
+	demo_complete      = bool(data.get("demo_complete", false))
 	max_capacity_level = int(data.get("max_capacity_level", 1))
 	auto_collect_level = int(data.get("auto_collect_level", 0))
-	auto_tap_level = int(data.get("auto_tap_level", 0))
+	auto_tap_level     = int(data.get("auto_tap_level", 0))
+
 	var saved = data.get("buildings", [])
-	for i in range(min(saved.size(), buildings.size())):
-		buildings[i].level       = int(saved[i].get("level", 1))
-		buildings[i].ready       = int(saved[i].get("ready", 0))
-		buildings[i].progress_ms = float(saved[i].get("progress_ms", 0.0))
-		buildings[i].unlocked    = bool(saved[i].get("unlocked", false))
+	# Load με βάση το id για σωστή αντιστοίχιση
+	var saved_by_id = {}
+	for sb in saved:
+		saved_by_id[int(sb.get("id", -1))] = sb
+	for i in range(buildings.size()):
+		var bid = buildings[i].id
+		if saved_by_id.has(bid):
+			var sb = saved_by_id[bid]
+			buildings[i].level       = int(sb.get("level", 1))
+			buildings[i].ready       = int(sb.get("ready", 0))
+			buildings[i].progress_ms = float(sb.get("progress_ms", 0.0))
+			buildings[i].unlocked    = bool(sb.get("unlocked", false))
 
 func _notification(what: int):
 	if what == NOTIFICATION_APPLICATION_PAUSED:
