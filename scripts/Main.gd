@@ -1,8 +1,7 @@
-extends Node2D
+extends Control
 
 const BuildingScene = preload("res://scenes/Building.tscn")
 
-# Nodes που θα δημιουργηθούν δυναμικά
 var gold_label: Label
 var total_label: Label
 var grid: GridContainer
@@ -11,6 +10,7 @@ var tap_button: Button
 var auto_collect_btn: Button
 var max_cap_btn: Button
 var auto_tap_btn: Button
+var scroll: ScrollContainer
 
 var auto_collect_timer: float = 0.0
 var auto_tap_timer: float = 0.0
@@ -18,52 +18,61 @@ var tap_rotation_deg: float = 0.0
 var _demo_shown: bool = false
 
 func _ready():
+	# Full rect
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
 	_build_ui()
+
 	GameState.gold_changed.connect(_update_gold)
 	GameState.special_upgraded.connect(_update_special_buttons)
+
 	_update_gold(GameState.gold)
 	_update_special_buttons()
+
 	if GameState.demo_complete:
 		_demo_shown = true
 
 func _build_ui():
-	var vp = get_viewport().get_visible_rect().size
-
-	# ── Background ──────────────────────────────────────────
+	# ── BACKGROUND ──────────────────────────────────────────
 	var bg = ColorRect.new()
 	bg.color = Color(0.08, 0.1, 0.08)
-	bg.size = vp
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	var ui = $UI
+	# ── MAIN VBOX ────────────────────────────────────────────
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vbox.add_theme_constant_override("separation", 0)
+	add_child(vbox)
 
-	# ── TOP BAR ─────────────────────────────────────────────
+	# ── TOP BAR ──────────────────────────────────────────────
 	var top_bar = PanelContainer.new()
-	top_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	top_bar.custom_minimum_size = Vector2(vp.x, 80)
+	top_bar.custom_minimum_size = Vector2(0, 75)
+	top_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var top_style = StyleBoxFlat.new()
 	top_style.bg_color = Color(0.07, 0.11, 0.07)
 	top_style.border_color = Color(0.2, 0.5, 0.15)
 	top_style.border_width_bottom = 2
 	top_bar.add_theme_stylebox_override("panel", top_style)
-	ui.add_child(top_bar)
+	vbox.add_child(top_bar)
 
 	var top_margin = MarginContainer.new()
 	top_margin.add_theme_constant_override("margin_left", 12)
 	top_margin.add_theme_constant_override("margin_right", 12)
-	top_margin.add_theme_constant_override("margin_top", 8)
-	top_margin.add_theme_constant_override("margin_bottom", 8)
+	top_margin.add_theme_constant_override("margin_top", 6)
+	top_margin.add_theme_constant_override("margin_bottom", 6)
 	top_bar.add_child(top_margin)
 
 	var top_hbox = HBoxContainer.new()
+	top_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_hbox.add_theme_constant_override("separation", 8)
 	top_margin.add_child(top_hbox)
 
 	var title = Label.new()
-	title.text = "🌾 Farm Idle"
+	title.text = "Farm Idle"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 20)
 	title.add_theme_color_override("font_color", Color(0.6, 1.0, 0.4))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_hbox.add_child(title)
 
 	var gold_vbox = VBoxContainer.new()
@@ -73,7 +82,7 @@ func _build_ui():
 	gold_label = Label.new()
 	gold_label.text = "0 💰"
 	gold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	gold_label.add_theme_font_size_override("font_size", 26)
+	gold_label.add_theme_font_size_override("font_size", 24)
 	gold_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.2))
 	gold_vbox.add_child(gold_label)
 
@@ -85,19 +94,19 @@ func _build_ui():
 	gold_vbox.add_child(total_label)
 
 	# ── SCROLL + GRID ────────────────────────────────────────
-	var scroll = ScrollContainer.new()
-	scroll.position = Vector2(0, 80)
-	scroll.size = Vector2(vp.x, vp.y - 80 - 115 - 105)
+	scroll = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode   = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	ui.add_child(scroll)
+	vbox.add_child(scroll)
 
 	var scroll_margin = MarginContainer.new()
-	scroll_margin.add_theme_constant_override("margin_left", 8)
-	scroll_margin.add_theme_constant_override("margin_right", 8)
-	scroll_margin.add_theme_constant_override("margin_top", 8)
-	scroll_margin.add_theme_constant_override("margin_bottom", 8)
 	scroll_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll_margin.add_theme_constant_override("margin_left",   8)
+	scroll_margin.add_theme_constant_override("margin_right",  8)
+	scroll_margin.add_theme_constant_override("margin_top",    8)
+	scroll_margin.add_theme_constant_override("margin_bottom", 8)
 	scroll.add_child(scroll_margin)
 
 	grid = GridContainer.new()
@@ -107,40 +116,40 @@ func _build_ui():
 	grid.add_theme_constant_override("v_separation", 8)
 	scroll_margin.add_child(grid)
 
-	# Πρόσθεσε buildings
 	for b in GameState.buildings:
 		var card = BuildingScene.instantiate()
 		card.building_id = b.id
 		grid.add_child(card)
 
-	# ── TAP BUTTON ───────────────────────────────────────────
-	var bottom_y = vp.y - 115 - 105
+	# ── BOTTOM BAR (tap button) ───────────────────────────────
 	var bottom_bar = CenterContainer.new()
-	bottom_bar.position = Vector2(0, bottom_y)
-	bottom_bar.size = Vector2(vp.x, 115)
-	ui.add_child(bottom_bar)
+	bottom_bar.custom_minimum_size = Vector2(0, 110)
+	bottom_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(bottom_bar)
 
 	tap_button = Button.new()
 	tap_button.custom_minimum_size = Vector2(100, 100)
 	tap_button.focus_mode = Control.FOCUS_NONE
+	tap_button.text = ""
 	var tex = load("res://assets/spuros.png")
 	if tex:
 		tap_button.icon = tex
 		tap_button.expand_icon = true
-	tap_button.text = ""
+
 	var mk_tap = func(col: Color) -> StyleBoxFlat:
 		var s = StyleBoxFlat.new()
 		s.bg_color = col
-		s.corner_radius_top_left    = 50
-		s.corner_radius_top_right   = 50
-		s.corner_radius_bottom_left = 50
+		s.corner_radius_top_left     = 50
+		s.corner_radius_top_right    = 50
+		s.corner_radius_bottom_left  = 50
 		s.corner_radius_bottom_right = 50
 		s.border_color = col.lightened(0.4)
 		s.border_width_top = s.border_width_bottom = 3
 		s.border_width_left = s.border_width_right = 3
 		s.shadow_color = Color(0,0,0,0.5)
-		s.shadow_size = 8
+		s.shadow_size  = 8
 		return s
+
 	tap_button.add_theme_stylebox_override("normal",   mk_tap.call(Color("#1a6b8a")))
 	tap_button.add_theme_stylebox_override("hover",    mk_tap.call(Color("#2285aa")))
 	tap_button.add_theme_stylebox_override("pressed",  mk_tap.call(Color("#0d4d66")))
@@ -149,42 +158,57 @@ func _build_ui():
 	bottom_bar.add_child(tap_button)
 
 	# ── SPECIAL BUTTONS ──────────────────────────────────────
-	var special_y = vp.y - 105
 	var special_bar = HBoxContainer.new()
-	special_bar.position = Vector2(0, special_y)
-	special_bar.size = Vector2(vp.x, 100)
+	special_bar.custom_minimum_size = Vector2(0, 95)
+	special_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	special_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	special_bar.add_theme_constant_override("separation", 8)
-	ui.add_child(special_bar)
+	special_bar.add_theme_constant_override("separation", 6)
+	vbox.add_child(special_bar)
+
+	var sp_margin = MarginContainer.new()
+	sp_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sp_margin.add_theme_constant_override("margin_left",   6)
+	sp_margin.add_theme_constant_override("margin_right",  6)
+	sp_margin.add_theme_constant_override("margin_bottom", 6)
+
+	var sp_hbox = HBoxContainer.new()
+	sp_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sp_hbox.add_theme_constant_override("separation", 6)
+
+	# Προσθέσαμε margin wrapper
+	vbox.remove_child(special_bar)
+	sp_margin.add_child(sp_hbox)
+	vbox.add_child(sp_margin)
 
 	var sp_colors = [Color("#155a75"), Color("#6a3208"), Color("#3d1575")]
-	var sp_names  = ["auto_collect", "max_cap", "auto_tap"]
-	var sp_btns   = []
+	var sp_btns: Array = []
 
 	for i in range(3):
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(0, 88)
+		btn.custom_minimum_size = Vector2(0, 85)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.add_theme_font_size_override("font_size", 10)
 		btn.add_theme_color_override("font_color", Color.WHITE)
 		var c = sp_colors[i]
+
 		var mk = func(col: Color) -> StyleBoxFlat:
 			var s = StyleBoxFlat.new()
 			s.bg_color = col
-			s.corner_radius_top_left    = 10
-			s.corner_radius_top_right   = 10
-			s.corner_radius_bottom_left = 10
+			s.corner_radius_top_left     = 10
+			s.corner_radius_top_right    = 10
+			s.corner_radius_bottom_left  = 10
 			s.corner_radius_bottom_right = 10
 			s.border_color = col.lightened(0.3)
 			s.border_width_top = s.border_width_bottom = 1
 			s.border_width_left = s.border_width_right = 1
 			return s
+
 		btn.add_theme_stylebox_override("normal",   mk.call(c))
 		btn.add_theme_stylebox_override("hover",    mk.call(c.lightened(0.12)))
 		btn.add_theme_stylebox_override("pressed",  mk.call(c.darkened(0.2)))
 		btn.add_theme_stylebox_override("focus",    StyleBoxEmpty.new())
-		special_bar.add_child(btn)
+		sp_hbox.add_child(btn)
 		sp_btns.append(btn)
 
 	auto_collect_btn = sp_btns[0]
@@ -196,8 +220,9 @@ func _build_ui():
 	auto_tap_btn.pressed.connect(_on_auto_tap_upgrade)
 
 	# ── UPGRADE CARD ─────────────────────────────────────────
-	upgrade_card = $UpgradeCard
-	upgrade_card.hide()
+	upgrade_card = get_node_or_null("UpgradeCard")
+	if upgrade_card:
+		upgrade_card.hide()
 
 # ─── Process ─────────────────────────────────────────────────
 
@@ -253,7 +278,8 @@ func _update_special_buttons():
 	if not auto_collect_btn: return
 	var ac = GameState.auto_collect_level
 	var ac_c = GameState.auto_collect_upgrade_cost()
-	auto_collect_btn.text = "🌾 Αυτο-\nΣυλλογή\n🔓 %s💰" % GameState.fmt_number(float(ac_c)) if ac == 0 else "🌾 Αυτο-\nΣυλλογή\nLv%d|%s\n+%s💰" % [ac, GameState.fmt_time(GameState.auto_collect_interval()), GameState.fmt_number(float(ac_c))]
+	auto_collect_btn.text = "🌾 Αυτο-\nΣυλλογή\n🔓 %s💰" % GameState.fmt_number(float(ac_c)) if ac == 0 \
+		else "🌾 Αυτο-\nΣυλλογή\nLv%d|%s\n+%s💰" % [ac, GameState.fmt_time(GameState.auto_collect_interval()), GameState.fmt_number(float(ac_c))]
 	auto_collect_btn.modulate = Color(1,1,1) if GameState.gold >= ac_c else Color(0.5,0.5,0.5)
 
 	var mc_c = GameState.max_capacity_upgrade_cost()
@@ -262,7 +288,8 @@ func _update_special_buttons():
 
 	var at = GameState.auto_tap_level
 	var at_c = GameState.auto_tap_upgrade_cost()
-	auto_tap_btn.text = "💧 Αυτο-\nΠάτημα\n🔓 %s💰" % GameState.fmt_number(float(at_c)) if at == 0 else "💧 Αυτο-\nΠάτημα\nLv%d|%s\n+%s💰" % [at, GameState.fmt_time(GameState.auto_tap_interval()), GameState.fmt_number(float(at_c))]
+	auto_tap_btn.text = "💧 Αυτο-\nΠάτημα\n🔓 %s💰" % GameState.fmt_number(float(at_c)) if at == 0 \
+		else "💧 Αυτο-\nΠάτημα\nLv%d|%s\n+%s💰" % [at, GameState.fmt_time(GameState.auto_tap_interval()), GameState.fmt_number(float(at_c))]
 	auto_tap_btn.modulate = Color(1,1,1) if GameState.gold >= at_c else Color(0.5,0.5,0.5)
 
 func _update_gold(_v):
@@ -290,7 +317,8 @@ func _check_game_complete():
 	if _demo_shown: return
 	if not GameState.check_all_unlocked(): return
 	_demo_shown = true
-	upgrade_card.open_demo_complete()
+	if upgrade_card:
+		upgrade_card.open_demo_complete()
 
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
