@@ -18,17 +18,15 @@ var tap_rotation_deg: float = 0.0
 var _demo_shown: bool = false
 
 func _ready():
-	# Full rect
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	call_deferred("_build_ui")
+	call_deferred("_connect_signals")
 
-	_build_ui()
-
+func _connect_signals():
 	GameState.gold_changed.connect(_update_gold)
 	GameState.special_upgraded.connect(_update_special_buttons)
-
 	_update_gold(GameState.gold)
 	_update_special_buttons()
-
 	if GameState.demo_complete:
 		_demo_shown = true
 
@@ -144,9 +142,10 @@ func _build_ui():
 		s.corner_radius_bottom_left  = 50
 		s.corner_radius_bottom_right = 50
 		s.border_color = col.lightened(0.4)
-		s.border_width_top = s.border_width_bottom = 3
-		s.border_width_left = s.border_width_right = 3
-		s.shadow_color = Color(0,0,0,0.5)
+		s.border_width_top = 3
+		s.border_width_bottom = 3
+		s.border_width_left = 3
+		s.border_width_right = 3		s.shadow_color = Color(0,0,0,0.5)
 		s.shadow_size  = 8
 		return s
 
@@ -200,8 +199,8 @@ func _build_ui():
 			s.corner_radius_bottom_left  = 10
 			s.corner_radius_bottom_right = 10
 			s.border_color = col.lightened(0.3)
-			s.border_width_top = s.border_width_bottom = 1
-			s.border_width_left = s.border_width_right = 1
+			s.border_width_top = 3\n\t\ts.border_width_bottom = 1
+			s.border_width_left = 3\n\t\ts.border_width_right = 1
 			return s
 
 		btn.add_theme_stylebox_override("normal",   mk.call(c))
