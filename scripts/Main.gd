@@ -129,6 +129,7 @@ func _build_ui():
 	tap_button.custom_minimum_size = Vector2(100, 100)
 	tap_button.focus_mode = Control.FOCUS_NONE
 	tap_button.text = ""
+	tap_button.pivot_offset = Vector2(50, 50)
 	var tex = load("res://assets/spuros.png")
 	if tex:
 		tap_button.icon = tex
@@ -145,8 +146,9 @@ func _build_ui():
 		s.border_width_top = 3
 		s.border_width_bottom = 3
 		s.border_width_left = 3
-		s.border_width_right = 3		s.shadow_color = Color(0,0,0,0.5)
-		s.shadow_size  = 8
+		s.border_width_right = 3
+		s.shadow_color = Color(0, 0, 0, 0.5)
+		s.shadow_size = 8
 		return s
 
 	tap_button.add_theme_stylebox_override("normal",   mk_tap.call(Color("#1a6b8a")))
@@ -199,8 +201,10 @@ func _build_ui():
 			s.corner_radius_bottom_left  = 10
 			s.corner_radius_bottom_right = 10
 			s.border_color = col.lightened(0.3)
-			s.border_width_top = 3\n\t\ts.border_width_bottom = 1
-			s.border_width_left = 3\n\t\ts.border_width_right = 1
+			s.border_width_top = 3
+			s.border_width_bottom = 1
+			s.border_width_left = 3
+			s.border_width_right = 1
 			return s
 
 		btn.add_theme_stylebox_override("normal",   mk.call(c))
@@ -246,7 +250,6 @@ func _process(delta: float):
 func _on_tap_pressed():
 	var earned = GameState.tap_gold()
 	tap_rotation_deg += 1.0
-	tap_button.pivot_offset = tap_button.size / 2.0
 	tap_button.rotation_degrees = tap_rotation_deg
 	_show_float("💧 +%d" % earned, Color(0.4,0.85,1.0))
 
