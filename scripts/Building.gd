@@ -19,8 +19,10 @@ func _ready():
 	_was_unlocked = GameState.buildings[building_id].unlocked
 	if _was_unlocked:
 		_apply_card_style()
+		_update_ui()
 	else:
 		_apply_locked_style()
+		_update_locked_ui()
 
 func _process(delta: float):
 	var b = GameState.buildings[building_id]
