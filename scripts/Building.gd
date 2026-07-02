@@ -1,6 +1,10 @@
 extends PanelContainer
 
-@export var building_id: int = 0
+@export var building_id: int = 0:
+	set(value):
+		building_id = value
+		if is_inside_tree():
+			call_deferred("_refresh_ui")
 
 @onready var icon_label     = $MarginContainer/VBoxContainer/IconLabel
 @onready var name_label     = $MarginContainer/VBoxContainer/NameLabel
@@ -13,11 +17,19 @@ extends PanelContainer
 var _style_applied: bool = false
 var _was_unlocked: bool = false
 
+func _enter_tree():
+	_refresh_ui()
+
 func _ready():
 	collect_button.pressed.connect(_on_collect_pressed)
 	upgrade_button.pressed.connect(_on_upgrade_pressed)
 	_was_unlocked = GameState.buildings[building_id].unlocked
-	if _was_unlocked:
+	_refresh_ui()
+
+func _refresh_ui():
+	if not is_instance_valid(icon_label): return
+	var b = GameState.buildings[building_id]
+	if b.unlocked:
 		_apply_card_style()
 		_update_ui()
 	else:
