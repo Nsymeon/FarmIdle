@@ -17,9 +17,6 @@ extends PanelContainer
 var _style_applied: bool = false
 var _was_unlocked: bool = false
 
-func _enter_tree():
-	_refresh_ui()
-
 func _ready():
 	collect_button.pressed.connect(_on_collect_pressed)
 	upgrade_button.pressed.connect(_on_upgrade_pressed)
