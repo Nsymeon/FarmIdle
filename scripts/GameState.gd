@@ -4,7 +4,7 @@ signal gold_changed(new_gold: float)
 signal building_updated(id: int)
 signal special_upgraded
 
-var gold: float = 0.0
+var gold: float = 100.0
 var total_earned: float = 0.0
 var last_save_time: int = 0
 var demo_complete: bool = false
